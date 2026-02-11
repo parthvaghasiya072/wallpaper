@@ -17,6 +17,8 @@ app.use(cors());
 
 // Routes
 app.use('/api/user', require('./routes/User.route.js'));
+app.use('/api/admin', require('./routes/Admin.route.js'));
+app.use('/api', require('./routes/Index.route.js'));
 
 // Default Route
 app.get('/', (req, res) => {
