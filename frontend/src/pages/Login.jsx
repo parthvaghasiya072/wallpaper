@@ -1,0 +1,294 @@
+/* eslint-disable no-unused-vars */
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiCheck } from 'react-icons/fi';
+import { HiOutlineSparkles } from 'react-icons/hi';
+import toast, { Toaster } from 'react-hot-toast';
+import AnimatedBackground from '../components/AnimatedBackground';
+
+const AnimatedInput = ({ icon: Icon, type, placeholder, value, onChange, name }) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const isPasswordField = type === 'password';
+
+    return (
+        <div className="w-full group">
+            <div
+                className={`flex items-center gap-3 px-4 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border backdrop-blur-md ${isFocused
+                        ? 'bg-black/40 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.1)]'
+                        : 'bg-black/20 border-white/5 hover:border-white/20'
+                    }`}
+            >
+                <Icon className={`text-lg transition-colors duration-300 ${isFocused ? 'text-purple-400' : 'text-white/20'}`} />
+
+                <input
+                    type={isPasswordField ? (showPassword ? 'text' : 'password') : type}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    name={name}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    className="w-full bg-transparent text-white placeholder-white/20 outline-none text-sm"
+                    autoComplete={isPasswordField ? "new-password" : "off"}
+                    spellCheck="false"
+                />
+
+                {isPasswordField && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-white/20 hover:text-white/40 transition-colors px-1"
+                    >
+                        {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const Login = () => {
+    const [isLogin, setIsLogin] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const [loginData, setLoginData] = useState({ email: '', password: '' });
+    const [registerData, setRegisterData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+    });
+
+    const handleLoginChange = (e) => setLoginData({ ...loginData, [e.target.name]: e.target.value });
+    const handleRegisterChange = (e) => setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        if (!loginData.email || !loginData.password) return toast.error('Please fill in all fields');
+        setIsLoading(true);
+        // Local Identity Protocol Simulation
+        setTimeout(() => {
+            toast.success(`Welcome back!`);
+            setIsLoading(false);
+        }, 1500);
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        const { firstName, lastName, email, password, confirmPassword } = registerData;
+        if (!firstName || !lastName || !email || !password || !confirmPassword) return toast.error('Please fill in all fields');
+        if (password !== confirmPassword) return toast.error('Passwords do not match');
+        if (password.length < 6) return toast.error('Password must be at least 6 characters');
+
+        setIsLoading(true);
+        // Local Onboarding Simulation
+        setTimeout(() => {
+            toast.success('Account created successfully!');
+            setIsLoading(false);
+            setIsLogin(true);
+        }, 2000);
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#060412]">
+            <Toaster position="top-center" />
+
+            <AnimatedBackground />
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.92, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-md mx-4"
+            >
+                <motion.div
+                    layout
+                    className="relative rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-[0_32px_80px_-16px_rgba(0,0,0,0.8)] border border-white/20 bg-white/[0.08] backdrop-blur-[60px]"
+                >
+                    <motion.div
+                        className="absolute inset-0 bg-gradient-to-br from-transparent via-white/[0.05] to-transparent pointer-events-none"
+                        animate={{ x: ['-100%', '200%'], y: ['-100%', '200%'] }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                    />
+
+                    <div className="relative px-6 py-10 sm:px-10 sm:py-12">
+                        <div className="flex flex-col items-center mb-8 sm:mb-10">
+                            <motion.div
+                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-500 flex items-center justify-center mb-4 sm:mb-6 shadow-[0_8px_40px_rgba(139,92,246,0.5)] relative group"
+                                whileHover={{ scale: 1.05, rotate: 5 }}
+                            >
+                                <HiOutlineSparkles className="text-white text-3xl sm:text-4xl" />
+                                <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-white/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </motion.div>
+
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={isLogin ? 'login-header' : 'reg-header'}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="text-center"
+                                >
+                                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2 tracking-tight">
+                                        {isLogin ? 'Welcome Back' : 'Create Account'}
+                                    </h1>
+                                    <p className="text-purple-300/40 text-xs sm:text-sm font-medium">
+                                        {isLogin ? 'Sign in to your account' : 'Join our community today'}
+                                    </p>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="flex flex-col justify-start">
+                            <AnimatePresence mode="wait">
+                                {isLogin ? (
+                                    <motion.form
+                                        key="login"
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 10 }}
+                                        onSubmit={handleLogin}
+                                        className="space-y-4 sm:space-y-5"
+                                    >
+                                        <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={loginData.email} onChange={handleLoginChange} delay={0.1} />
+                                        <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={loginData.password} onChange={handleLoginChange} delay={0.2} />
+
+                                        <div className="flex justify-end pr-1">
+                                            <button type="button" className="text-[10px] sm:text-xs text-purple-400 hover:text-purple-300 transition-colors font-medium">
+                                                Forgot password?
+                                            </button>
+                                        </div>
+
+                                        <motion.button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            whileHover={{ scale: 1.02, backgroundColor: 'rgba(139,92,246,0.9)' }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-purple-600 text-white font-bold text-sm tracking-wide shadow-[0_12px_30px_rgba(139,92,246,0.4)] disabled:opacity-50 mt-2 sm:mt-4 overflow-hidden relative"
+                                        >
+                                            <AnimatePresence mode="wait">
+                                                {isLoading ? (
+                                                    <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center">
+                                                        <div className="w-5 h-5 border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
+                                                    </motion.div>
+                                                ) : (
+                                                    <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2">
+                                                        Sign In <FiArrowRight className="text-base" />
+                                                    </motion.span>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.button>
+                                    </motion.form>
+                                ) : (
+                                    <motion.form
+                                        key="register"
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        onSubmit={handleRegister}
+                                        className="space-y-3 sm:space-y-4"
+                                    >
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <AnimatedInput icon={FiUser} type="text" placeholder="First Name" name="firstName" value={registerData.firstName} onChange={handleRegisterChange} delay={0.05} />
+                                            <AnimatedInput icon={FiUser} type="text" placeholder="Last Name" name="lastName" value={registerData.lastName} onChange={handleRegisterChange} delay={0.1} />
+                                        </div>
+                                        <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={registerData.email} onChange={handleRegisterChange} delay={0.15} />
+                                        <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={registerData.password} onChange={handleRegisterChange} delay={0.2} />
+                                        <AnimatedInput icon={FiCheck} type="password" placeholder="Confirm Password" name="confirmPassword" value={registerData.confirmPassword} onChange={handleRegisterChange} delay={0.25} />
+
+                                        <motion.button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm tracking-wide shadow-[0_12px_30px_rgba(79,70,229,0.4)] mt-2 sm:mt-4"
+                                        >
+                                            {isLoading ? <div className="w-5 h-5 border-[3px] border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : "Create Account"}
+                                        </motion.button>
+                                    </motion.form>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="flex items-center gap-4 my-6 sm:my-8 opacity-20">
+                            <div className="flex-1 h-[1px] bg-white" />
+                            <span className="text-[10px] text-white uppercase font-bold tracking-widest">Or</span>
+                            <div className="flex-1 h-[1px] bg-white" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                            <motion.button
+                                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.08)' }}
+                                className="flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-white/5 bg-white/[0.03] text-white text-[10px] sm:text-[11px] font-bold uppercase transition-all duration-300 shadow-sm"
+                            >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                    <path fill="#EA4335" d="M5.27 9.77A7.78 7.78 0 0 1 12 4.5c1.94 0 3.68.71 5.05 1.86l3.76-3.76A12.24 12.24 0 0 0 12 0 12.24 12.24 0 0 0 1.24 6.65l4.03 3.12Z" />
+                                    <path fill="#34A853" d="M16.04 18.01A7.4 7.4 0 0 1 12 19.5a7.78 7.78 0 0 1-6.73-5.27l-4.03 3.12A12.24 12.24 0 0 0 12 24c3.19 0 6.05-1.22 8.22-3.22l-3.78-2.77h-.4Z" />
+                                    <path fill="#4A90D9" d="M20.58 20.78A11.94 11.94 0 0 0 24 12c0-.82-.1-1.64-.29-2.45H12v5h6.82a6.1 6.1 0 0 1-2.38 3.46l3.78 2.77h.36Z" />
+                                    <path fill="#FBBC05" d="M5.27 14.23A7.63 7.63 0 0 1 4.5 12c0-.8.14-1.57.37-2.23L1.24 6.65A12.13 12.13 0 0 0 0 12c0 1.96.46 3.81 1.24 5.35l4.03-3.12Z" />
+                                </svg>
+                                Google
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.08)' }}
+                                className="flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-white/5 bg-white/[0.03] text-white text-[10px] sm:text-[11px] font-bold uppercase transition-all duration-300 shadow-sm"
+                            >
+                                <svg className="w-4 h-4" fill="white" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12Z" /></svg>
+                                GitHub
+                            </motion.button>
+                        </div>
+
+                        <div className="mt-8 sm:mt-12 text-center">
+                            <button
+                                type="button"
+                                onClick={() => setIsLogin(!isLogin)}
+                                className="group inline-flex flex-col sm:flex-row items-center gap-1 sm:gap-2"
+                            >
+                                <span className="text-xs sm:text-sm text-purple-300/40">
+                                    {isLogin ? "Don't have an account?" : "Already have an account?"}
+                                </span>
+                                <span className="text-xs sm:text-sm font-bold text-purple-400 group-hover:text-purple-300 transition-colors">
+                                    {isLogin ? "Sign Up" : "Sign In"}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-600/10 blur-[100px] -z-10" />
+                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-600/10 blur-[100px] -z-10" />
+            </motion.div>
+
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+                
+                * { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+                /* Definitive Fix for Inset Autofill Appearance */
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover, 
+                input:-webkit-autofill:focus, 
+                input:-webkit-autofill:active {
+                    -webkit-text-fill-color: white !important;
+                    -webkit-box-shadow: 0 0 0px 1000px #0c0a1a inset !important;
+                    transition: background-color 5000s ease-in-out 0s;
+                    caret-color: white;
+                }
+
+                input::placeholder { color: rgba(167, 139, 250, 0.15); }
+
+                /* Hide Scrollbars */
+                ::-webkit-scrollbar { display: none; }
+                
+                ::selection {
+                    background: rgba(139, 92, 246, 0.4);
+                    color: white;
+                }
+            `}</style>
+        </div>
+    );
+};
+
+export default Login;
