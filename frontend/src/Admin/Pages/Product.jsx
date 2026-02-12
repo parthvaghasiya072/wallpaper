@@ -2,404 +2,261 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOutletContext } from 'react-router-dom';
 import {
-    FiPlus,
-    FiSearch,
-    FiGrid,
-    FiList,
-    FiImage,
-    FiTrash2,
-    FiEdit3,
-    FiX,
-    FiCheck,
-    FiPaperclip,
-    FiDollarSign,
-    FiBox,
-    FiChevronDown,
-    FiFilter
+    FiPlus, FiGrid, FiList, FiTable,
+    FiEye, FiEdit3, FiTrash2, FiLayers
 } from 'react-icons/fi';
+
+// Components
+import CommonTable from '../Component/CommonTable';
+import ProductDetailModal from '../Component/ProductDetailModal';
+import AddProductModal from '../Component/AddProductModal';
 
 const Product = () => {
     const { isDark } = useOutletContext();
+    const [viewType, setViewType] = useState('table');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [viewType, setViewType] = useState('grid');
+    const [viewDetailProduct, setViewDetailProduct] = useState(null);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-    // Form State
     const [formData, setFormData] = useState({
         titleName: '',
         description: '',
         stocks: '',
         category: '',
-        images: [],
+        images: [''],
         paperOptions: [{ paperType: '', pricePerSqFt: '' }]
     });
 
-    // Mock Data for Demo
     const [products, setProducts] = useState([
         {
-            id: 1,
-            titleName: 'Abstract Ocean Blue',
-            category: 'Abstract',
-            stocks: 45,
-            description: 'A deep blue abstract ocean wallpaper for modern homes.',
+            id: 1, titleName: 'Ethereal Blue Waves', category: 'Abstract', stocks: 45,
+            description: 'Dive into the deep tranquil blues of this abstract wave masterpiece.',
             images: ['https://images.unsplash.com/photo-1541701494587-cb58502866ab'],
             paperOptions: [{ paperType: 'Premium Silk', pricePerSqFt: 15 }]
         },
         {
-            id: 2,
-            titleName: 'Mountain Sunset',
-            category: 'Nature',
-            stocks: 12,
-            description: 'Beautiful sunset over the mountains in vivid colors.',
+            id: 2, titleName: 'Alpine Sunset Peak', category: 'Nature', stocks: 8,
+            description: 'Experience the golden hour every day. High-resolution capture of Alpine peaks.',
             images: ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b'],
             paperOptions: [{ paperType: 'Vinyl Matte', pricePerSqFt: 22 }]
+        },
+        {
+            id: 3, titleName: 'Cyberpunk Neon Streets', category: 'Futuristic', stocks: 20,
+            description: 'Hyper-detailed futuristic city streets illuminated by neon lights.',
+            images: ['https://images.unsplash.com/photo-1605810230434-7631ac76ec81'],
+            paperOptions: [{ paperType: 'High Gloss Metallic', pricePerSqFt: 35 }]
+        },
+        {
+            id: 4, titleName: 'Golden Eucalyptus Leaves', category: 'Botanical', stocks: 15,
+            description: 'Elegant golden eucalyptus leaves with a subtle metallic finish.',
+            images: ['https://images.unsplash.com/photo-1533038590840-1cde6e668a91'],
+            paperOptions: [{ paperType: 'Textured Canvas', pricePerSqFt: 28 }]
+        },
+        {
+            id: 5, titleName: 'Midnight Forest Mist', category: 'Landscape', stocks: 32,
+            description: 'A mysterious foggy forest at midnight.',
+            images: ['https://images.unsplash.com/photo-1441974231531-c6227db76b6e'],
+            paperOptions: [{ paperType: 'Non-Woven Fab', pricePerSqFt: 19 }]
+        },
+        {
+            id: 6, titleName: 'Geometric Marble Fusion', category: 'Geometric', stocks: 5,
+            description: 'Sleek marble textures fused with sharp geometric gold lines.',
+            images: ['https://images.unsplash.com/photo-1517430816045-df4b7de11d1d'],
+            paperOptions: [{ paperType: 'Premium Silk', pricePerSqFt: 40 }]
         }
     ]);
 
-    const handleAddPaperOption = () => {
-        setFormData({
-            ...formData,
-            paperOptions: [...formData.paperOptions, { paperType: '', pricePerSqFt: '' }]
-        });
-    };
-
-    const handleRemovePaperOption = (index) => {
-        const newOptions = [...formData.paperOptions];
-        newOptions.splice(index, 1);
-        setFormData({ ...formData, paperOptions: newOptions });
-    };
-
-    const handlePaperOptionChange = (index, field, value) => {
-        const newOptions = [...formData.paperOptions];
-        newOptions[index][field] = value;
-        setFormData({ ...formData, paperOptions: newOptions });
+    // Handlers
+    const handlers = {
+        handleAddImageField: () => setFormData(prev => ({ ...prev, images: [...prev.images, ''] })),
+        handleRemoveImageField: (index) => setFormData(prev => {
+            const newImages = [...prev.images];
+            newImages.splice(index, 1);
+            return { ...prev, images: newImages };
+        }),
+        handleImageChange: (index, value) => setFormData(prev => {
+            const newImages = [...prev.images];
+            newImages[index] = value;
+            return { ...prev, images: newImages };
+        }),
+        handleAddPaperOption: () => setFormData(prev => ({
+            ...prev,
+            paperOptions: [...prev.paperOptions, { paperType: '', pricePerSqFt: '' }]
+        })),
+        handleRemovePaperOption: (index) => setFormData(prev => {
+            const newOptions = [...prev.paperOptions];
+            newOptions.splice(index, 1);
+            return { ...prev, paperOptions: newOptions };
+        }),
+        handlePaperOptionChange: (index, field, value) => setFormData(prev => {
+            const newOptions = [...prev.paperOptions];
+            newOptions[index][field] = value;
+            return { ...prev, paperOptions: newOptions };
+        })
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Here you would normally dispatch to Redux or call an API
+        const validImages = formData.images.filter(img => img.trim() !== '');
         const newProduct = {
             ...formData,
             id: Date.now(),
-            images: formData.images.length > 0 ? formData.images : ['https://via.placeholder.com/300']
+            images: validImages.length > 0 ? validImages : ['https://via.placeholder.com/600x800']
         };
         setProducts([newProduct, ...products]);
         setIsModalOpen(false);
         setFormData({
-            titleName: '',
-            description: '',
-            stocks: '',
-            category: '',
-            images: [],
-            paperOptions: [{ paperType: '', pricePerSqFt: '' }]
+            titleName: '', description: '', stocks: '', category: '',
+            images: [''], paperOptions: [{ paperType: '', pricePerSqFt: '' }]
         });
     };
 
+    const productColumns = [
+        {
+            header: "Product",
+            accessor: "titleName",
+            render: (item) => (
+                <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-[#132846]' : 'bg-slate-100'} w-12 h-12 flex-shrink-0 overflow-hidden`}>
+                        <img src={item.images[0]} className="w-full h-full object-cover transition-transform duration-500 hover:scale-125" alt="" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className={` text-sm truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.titleName}</span>
+                        {/* <span className="text-[10px] opacity-40 truncate max-w-[150px] font-medium uppercase tracking-wider">{item.category}</span> */}
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: "Category",
+            accessor: "titleName",
+            render: (item) => (
+                <div className="flex items-center gap-4">
+                    <div className="flex flex-col min-w-0">
+                        <span className={` text-sm truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.titleName}</span>
+                        {/* <span className="text-[10px] opacity-40 truncate max-w-[150px] font-medium uppercase tracking-wider">{item.category}</span> */}
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: "Inventory",
+            accessor: "stocks",
+            render: (item) => (
+                <div className="flex flex-col gap-1 w-24">
+                    <span className={`text-xs font-black ${item.stocks < 10 ? 'text-rose-500' : isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        {String(item.stocks || 0).padStart(2, '0')} <span className="text-[9px] opacity-30">PCS</span>
+                    </span>
+                </div>
+            )
+        },
+        {
+            header: "Price",
+            accessor: "paperOptions",
+            render: (item) => (
+                <span className={`text-sm font-black ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                    ${Math.min(...item.paperOptions.map(o => o.pricePerSqFt))}
+                    <span className="text-[10px] opacity-30 ml-0.5">/SQFT</span>
+                </span>
+            )
+        }
+    ];
+
     return (
-        <div className="space-y-8 min-h-screen">
-            {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-800/40 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 transition-all shadow-sm">
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex flex-col">
-                    <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Product Management</h1>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Manage your wallpaper collection and pricing.</p>
+                    <h1 className={`text-sm font-black uppercase tracking-widest ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>WallArt Inventory</h1>
+                    <p className="text-[10px]  opacity-30 uppercase tracking-[0.2em]">Management & Performance Metrics</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                        <FiSearch className="text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search products..."
-                            className="bg-transparent border-none outline-none text-sm w-48"
-                        />
-                    </div>
-
-                    <div className={`flex items-center gap-1 p-1 rounded-xl border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                        <button
-                            onClick={() => setViewType('grid')}
-                            className={`p-2 rounded-lg ${viewType === 'grid' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                        >
-                            <FiGrid />
-                        </button>
-                        <button
-                            onClick={() => setViewType('list')}
-                            className={`p-2 rounded-lg ${viewType === 'list' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
-                        >
-                            <FiList />
-                        </button>
+                <div className="flex items-center gap-3">
+                    <div className={`flex items-center gap-1 p-1 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                        {[
+                            { type: 'grid', icon: FiGrid },
+                            { type: 'table', icon: FiTable },
+                            { type: 'list', icon: FiList }
+                        ].map(({ type, icon: Icon }) => (
+                            <button
+                                key={type}
+                                onClick={() => setViewType(type)}
+                                className={`p-2 rounded flex items-center justify-center transition-all ${viewType === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-indigo-500'}`}
+                            >
+                                <Icon size={14} />
+                            </button>
+                        ))}
                     </div>
 
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all"
+                        className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-lg transition-all shadow-lg"
                     >
-                        <FiPlus /> Add Wallpaper
+                        <FiPlus size={16} /> New Art
                     </button>
                 </div>
             </div>
 
-            {/* Products Grid */}
-            <div className={`grid ${viewType === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'grid-cols-1'} gap-6`}>
-                <AnimatePresence>
-                    {products.map((product) => (
-                        <motion.div
-                            key={product.id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className={`group relative overflow-hidden rounded-[2rem] border transition-all ${isDark ? 'bg-slate-800/40 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-white shadow-sm hover:shadow-xl hover:shadow-indigo-500/5'
-                                }`}
-                        >
-                            <div className="h-48 overflow-hidden relative">
-                                <img
-                                    src={product.images[0]}
-                                    alt={product.titleName}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                                <div className="absolute top-4 right-4 flex gap-2">
-                                    <button className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white hover:bg-indigo-600 transition-all">
-                                        <FiEdit3 size={16} />
-                                    </button>
-                                    <button className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white hover:bg-rose-600 transition-all">
-                                        <FiTrash2 size={16} />
-                                    </button>
-                                </div>
-                                <div className="absolute bottom-3 left-4">
-                                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[10px] font-bold text-white uppercase tracking-widest">
-                                        {product.category}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <h3 className={`font-bold text-lg truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{product.titleName}</h3>
-                                    <p className={`text-xs mt-1 line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{product.description}</p>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">Low Price</span>
-                                        <span className={`text-lg font-black ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                                            ${Math.min(...product.paperOptions.map(o => o.pricePerSqFt))}/ft²
-                                        </span>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">Stock</span>
-                                        <span className={`text-sm font-bold ${product.stocks < 10 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                            {product.stocks} pcs
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
-
-            {/* Add Product Modal */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            <div className="w-full">
+                {viewType === 'table' ? (
+                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+                        <CommonTable
+                            columns={productColumns} data={products} isDark={isDark}
+                            onView={(p) => { setViewDetailProduct(p); setActiveImageIndex(0); }}
+                            onEdit={(p) => console.log('Edit', p.id)}
+                            onDelete={(p) => console.log('Delete', p.id)}
+                            itemsPerPage={10}
                         />
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className={`relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[2.5rem] shadow-2xl ${isDark ? 'bg-[#0f172a] border border-slate-800' : 'bg-white border-white'
-                                }`}
-                        >
-                            {/* Modal Header */}
-                            <div className="flex items-center justify-between px-10 py-8 border-b border-slate-200 dark:border-slate-800">
-                                <div>
-                                    <h2 className={`text-2xl font-black title-font ${isDark ? 'text-white' : 'text-slate-900'}`}>New Wallpaper</h2>
-                                    <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Add an artistic masterpiece to your collection.</p>
-                                </div>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className={`p-3 rounded-2xl transition-all ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                    </motion.div>
+                ) : (
+                    <div className={`grid ${viewType === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'grid-cols-1'} gap-6`}>
+                        <AnimatePresence>
+                            {products.map((product) => (
+                                <motion.div
+                                    key={product.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                                    className={`group relative overflow-hidden rounded-xl border transition-all ${isDark ? 'bg-slate-800/40 border-slate-800 hover:border-indigo-500/30' : 'bg-white border-white shadow-sm hover:shadow-xl'}`}
                                 >
-                                    <FiX size={24} />
-                                </button>
-                            </div>
-
-                            {/* Modal Body */}
-                            <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(90vh-180px)] p-10 space-y-8 custom-scrollbar">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Title */}
-                                    <div className="space-y-2">
-                                        <label className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Wallpaper Title</label>
-                                        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'
-                                            }`}>
-                                            <FiEdit3 className="text-slate-400" />
-                                            <input
-                                                required
-                                                value={formData.titleName}
-                                                onChange={(e) => setFormData({ ...formData, titleName: e.target.value })}
-                                                type="text"
-                                                placeholder="e.g., Midnight Forest"
-                                                className="bg-transparent border-none outline-none text-sm w-full"
-                                            />
+                                    <div className="h-48 overflow-hidden relative">
+                                        <img src={product.images[0]} alt={product.titleName} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        <div className="absolute top-4 right-4 flex gap-2">
+                                            {[
+                                                { icon: FiEye, action: () => { setViewDetailProduct(product); setActiveImageIndex(0); }, bg: 'hover:bg-slate-900' },
+                                                { icon: FiEdit3, action: () => { }, bg: 'hover:bg-indigo-600' },
+                                                { icon: FiTrash2, action: () => { }, bg: 'hover:bg-rose-600' }
+                                            ].map(({ icon: Icon, action, bg }, i) => (
+                                                <button key={i} onClick={action} className={`p-2 bg-white/20 backdrop-blur-md rounded-xl text-white transition-all shadow-lg ${bg}`}>
+                                                    <Icon size={16} />
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="absolute bottom-3 left-4">
+                                            <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[10px]  text-white uppercase tracking-widest">{product.category}</span>
                                         </div>
                                     </div>
-
-                                    {/* Category */}
-                                    <div className="space-y-2">
-                                        <label className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Category</label>
-                                        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'
-                                            }`}>
-                                            <FiGrid className="text-slate-400" />
-                                            <select
-                                                required
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                className="bg-transparent border-none outline-none text-sm w-full appearance-none pr-8"
-                                            >
-                                                <option value="" disabled>Select Category</option>
-                                                <option value="Abstract">Abstract</option>
-                                                <option value="Nature">Nature</option>
-                                                <option value="Cyberpunk">Cyberpunk</option>
-                                                <option value="Minimalist">Minimalist</option>
-                                            </select>
+                                    <div className="p-6 space-y-4">
+                                        <h3 className={` text-lg truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{product.titleName}</h3>
+                                        <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                                            <span className={`text-lg font-black ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>${Math.min(...product.paperOptions.map(o => o.pricePerSqFt))}/ft²</span>
+                                            <span className={`text-xs  ${product.stocks < 10 ? 'text-rose-500' : 'text-emerald-500'}`}>{product.stocks} pcs</span>
                                         </div>
                                     </div>
-
-                                    {/* Stock */}
-                                    <div className="space-y-2">
-                                        <label className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Available Stocks</label>
-                                        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'
-                                            }`}>
-                                            <FiBox className="text-slate-400" />
-                                            <input
-                                                required
-                                                value={formData.stocks}
-                                                onChange={(e) => setFormData({ ...formData, stocks: e.target.value })}
-                                                type="number"
-                                                placeholder="Quantity"
-                                                className="bg-transparent border-none outline-none text-sm w-full"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Images (Placeholder for now) */}
-                                    <div className="space-y-2">
-                                        <label className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Wallpaper Preview URL</label>
-                                        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'
-                                            }`}>
-                                            <FiImage className="text-slate-400" />
-                                            <input
-                                                value={formData.images[0] || ''}
-                                                onChange={(e) => setFormData({ ...formData, images: [e.target.value] })}
-                                                type="text"
-                                                placeholder="https://..."
-                                                className="bg-transparent border-none outline-none text-sm w-full"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Description */}
-                                <div className="space-y-2">
-                                    <label className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Artwork Description</label>
-                                    <div className={`px-5 py-3 rounded-2xl border transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'
-                                        }`}>
-                                        <textarea
-                                            required
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            rows="3"
-                                            placeholder="Tell a story about this wallpaper..."
-                                            className="bg-transparent border-none outline-none text-sm w-full resize-none"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Paper Options (Dynamic) */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <label className={`text-xs font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Paper & Pricing Options</label>
-                                        <button
-                                            type="button"
-                                            onClick={handleAddPaperOption}
-                                            className="text-[10px] font-black uppercase bg-indigo-600/10 text-indigo-500 px-3 py-1 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
-                                        >
-                                            + Add Material
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        {formData.paperOptions.map((opt, index) => (
-                                            <motion.div
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                key={index}
-                                                className="flex items-center gap-3"
-                                            >
-                                                <div className={`flex-1 flex gap-3 px-4 py-2 rounded-xl border ${isDark ? 'bg-slate-900/40 border-slate-700' : 'bg-slate-100 border-slate-200'
-                                                    }`}>
-                                                    <input
-                                                        required
-                                                        value={opt.paperType}
-                                                        onChange={(e) => handlePaperOptionChange(index, 'paperType', e.target.value)}
-                                                        placeholder="e.g., Silk"
-                                                        className="bg-transparent border-none outline-none text-xs font-bold flex-1"
-                                                    />
-                                                    <div className="w-px h-6 bg-slate-700/20" />
-                                                    <div className="flex items-center gap-1">
-                                                        <FiDollarSign size={12} className="text-slate-400" />
-                                                        <input
-                                                            required
-                                                            value={opt.pricePerSqFt}
-                                                            onChange={(e) => handlePaperOptionChange(index, 'pricePerSqFt', e.target.value)}
-                                                            type="number"
-                                                            placeholder="0.00"
-                                                            className="bg-transparent border-none outline-none text-xs font-bold w-16"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                {formData.paperOptions.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemovePaperOption(index)}
-                                                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
-                                                    >
-                                                        <FiTrash2 size={16} />
-                                                    </button>
-                                                )}
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Modal Footer */}
-                                <div className="flex items-center gap-4 pt-6 border-t border-slate-200 dark:border-slate-800">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className={`flex-1 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isDark ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                            }`}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-[2] px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/40 transition-all flex items-center justify-center gap-3"
-                                    >
-                                        Register Artwork <FiCheck size={18} />
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                     </div>
                 )}
-            </AnimatePresence>
+            </div>
+
+            <ProductDetailModal
+                product={viewDetailProduct} isOpen={!!viewDetailProduct}
+                onClose={() => setViewDetailProduct(null)} isDark={isDark}
+                activeImageIndex={activeImageIndex} setActiveImageIndex={setActiveImageIndex}
+            />
+
+            <AddProductModal
+                isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
+                formData={formData} setFormData={setFormData}
+                handleSubmit={handleSubmit} isDark={isDark} handlers={handlers}
+            />
         </div>
     );
 };

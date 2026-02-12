@@ -54,7 +54,7 @@ const AdminLayout = () => {
                         toggleTheme={toggleTheme}
                     />
 
-                    <main className={`flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 ${isDark ? 'bg-transparent' : 'bg-gray-200'
+                    <main className={`flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 md:p-6 xl:p-8 ${isDark ? 'bg-transparent' : 'bg-gray-200'
                         }`}>
                         <div className="max-w-[1600px] mx-auto">
                             <AnimatePresence mode="wait">
