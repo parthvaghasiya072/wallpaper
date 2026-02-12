@@ -12,8 +12,8 @@ const FIXED_SAMPLES = Array.from({ length: 100 }, () => ({
 }));
 
 const AnimatedBackground = ({
-    variant = 'dark',        
-    bgColor,                 
+    variant = 'dark',
+    bgColor,
     particleCount = 35,
     showOrbs = true,
     showShapes = true,
@@ -23,6 +23,9 @@ const AnimatedBackground = ({
     showParticles = true,
     showLines = true,
     showLiquidMesh = true,
+    showSolarSystem = true,
+    showShootingStars = true,
+    showGrid = true,
 }) => {
     const isDark = variant === 'dark';
 
@@ -101,7 +104,55 @@ const AnimatedBackground = ({
         { id: 2, type: 'diamond', size: 35, x: '15%', y: '75%', rotate: 360, duration: 20, border: colors.pink.shape },
         { id: 3, type: 'square', size: 50, x: '75%', y: '70%', rotate: -360, duration: 35, border: colors.purple.shape },
         { id: 4, type: 'diamond', size: 20, x: '90%', y: '50%', rotate: 360, duration: 22, border: colors.blue.shape },
+        { id: 5, type: 'circle', size: 30, x: '45%', y: '10%', rotate: 0, duration: 40, border: colors.pink.shape },
+        { id: 6, type: 'circle', size: 45, x: '25%', y: '85%', rotate: 0, duration: 35, border: colors.blue.shape },
+        { id: 7, type: 'square', size: 15, x: '60%', y: '30%', rotate: 45, duration: 15, border: colors.purple.shape },
+        { id: 8, type: 'triangle', size: 30, x: '35%', y: '40%', rotate: 360, duration: 28, border: colors.purple.shape },
+        { id: 9, type: 'plus', size: 25, x: '65%', y: '15%', rotate: 180, duration: 20, border: colors.blue.shape },
     ], [colors]);
+
+    const orbitals = useMemo(() => [
+        { id: 0, x: '20%', y: '30%', radius: 60, duration: 25, color: colors.purple.dot, dotSize: 4 },
+        { id: 1, x: '80%', y: '70%', radius: 45, duration: 20, color: colors.blue.dot, dotSize: 3 },
+        { id: 2, x: '15%', y: '85%', radius: 35, duration: 15, color: colors.pink.dot, dotSize: 3 },
+    ], [colors]);
+
+    const ripples = useMemo(() => [
+        { id: 0, x: '50%', y: '50%', maxSize: 600, duration: 8, delay: 0 },
+        { id: 1, x: '50%', y: '50%', maxSize: 600, duration: 8, delay: 4 },
+    ], []);
+
+    const lines = useMemo(() => Array.from({ length: 10 }, (_, i) => ({
+        id: i,
+        width: Math.random() * 300 + 100,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        duration: Math.random() * 12 + 8,
+        delay: Math.random() * 5
+    })), []);
+
+    const sparkles = useMemo(() => Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        duration: Math.random() * 2 + 1,
+        delay: Math.random() * 5
+    })), []);
+
+    const solarSystem = useMemo(() => [
+        { id: 0, name: 'Core', size: 100, blur: 'blur-[60px]', color: 'bg-purple-500/10', orbit: 0, duration: 0 },
+        { id: 1, name: 'Inner', size: 8, color: colors.purple.dot, orbit: 120, duration: 20, delay: 0 },
+        { id: 2, name: 'Middle', size: 12, color: colors.blue.dot, orbit: 220, duration: 35, delay: -5 },
+        { id: 3, name: 'Outer', size: 10, color: colors.pink.dot, orbit: 340, duration: 50, delay: -10, hasRing: true },
+    ], [colors]);
+
+    const shootingStars = useMemo(() => Array.from({ length: 4 }, (_, i) => ({
+        id: i,
+        delay: Math.random() * 20,
+        duration: Math.random() * 2 + 1.5,
+        top: Math.random() * 50,
+        left: Math.random() * 100
+    })), []);
 
     return (
         <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ backgroundColor: resolvedBg, zIndex: 0 }}>
@@ -162,9 +213,11 @@ const AnimatedBackground = ({
                                 height: shape.size,
                                 left: shape.x,
                                 top: shape.y,
-                                border: `2.5px solid ${shape.border}`,
-                                borderRadius: shape.type === 'square' ? '8px' : '4px',
+                                border: shape.type === 'plus' || shape.type === 'triangle' ? 'none' : `2.5px solid ${shape.border}`,
+                                borderRadius: shape.type === 'circle' ? '50%' : shape.type === 'square' ? '8px' : '4px',
                                 transform: shape.type === 'diamond' ? 'rotate(45deg)' : 'none',
+                                background: shape.type === 'triangle' ? `linear-gradient(to bottom right, ${shape.border}, transparent)` : 'none',
+                                clipPath: shape.type === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : 'none',
                             }}
                             animate={{
                                 rotate: shape.type === 'diamond' ? [45, 45 + shape.rotate] : [0, shape.rotate],
@@ -176,7 +229,14 @@ const AnimatedBackground = ({
                                 y: { duration: 5, repeat: Infinity, ease: 'easeInOut' },
                                 opacity: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
                             }}
-                        />
+                        >
+                            {shape.type === 'plus' && (
+                                <div className="relative w-full h-full">
+                                    <div className="absolute top-1/2 left-0 w-full h-[2.5px]" style={{ backgroundColor: shape.border }} />
+                                    <div className="absolute top-0 left-1/2 w-[2.5px] h-full" style={{ backgroundColor: shape.border }} />
+                                </div>
+                            )}
+                        </motion.div>
                     ))}
                 </div>
             )}
@@ -206,6 +266,109 @@ const AnimatedBackground = ({
                                 repeat: Infinity,
                                 ease: 'easeInOut',
                             }}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {showLines && (
+                <div className="absolute inset-0 opacity-20">
+                    {lines.map((line) => (
+                        <motion.div
+                            key={line.id}
+                            className={`absolute h-[1px] bg-gradient-to-r ${colors.purple.line}`}
+                            style={{ width: line.width, left: `${line.x}%`, top: `${line.y}%`, rotate: -45 }}
+                            animate={{ x: [-200, 400], opacity: colors.lineOpacity }}
+                            transition={{ duration: line.duration, repeat: Infinity, ease: "linear", delay: line.delay }}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {showSolarSystem && (
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    {/* Central Glow */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-purple-600/5 blur-[100px]" />
+
+                    {solarSystem.map((planet) => (
+                        <div key={planet.id} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                            {/* Orbit Ring */}
+                            {planet.orbit > 0 && (
+                                <div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border border-white/[0.02] rounded-full"
+                                    style={{ width: planet.orbit * 2, height: planet.orbit * 2 }}
+                                />
+                            )}
+
+                            {/* Planet Container for Rotation */}
+                            <motion.div
+                                className="absolute left-1/2 top-1/2"
+                                style={{ width: planet.orbit * 2, height: planet.orbit * 2, marginLeft: -planet.orbit, marginTop: -planet.orbit }}
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: planet.duration, repeat: Infinity, ease: "linear", delay: planet.delay }}
+                            >
+                                {/* The Planet */}
+                                <div
+                                    className={`absolute left-full top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ${planet.color} ${planet.blur || 'blur-[1px]'}`}
+                                    style={{ width: planet.size, height: planet.size }}
+                                >
+                                    {planet.hasRing && (
+                                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[30%] border border-white/10 rounded-[100%] rotate-45" />
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {showSparkles && (
+                <div className="absolute inset-0">
+                    {sparkles.map((sparkle) => (
+                        <motion.div
+                            key={sparkle.id}
+                            className={`absolute w-1 h-1 bg-white rounded-full ${colors.purple.sparkle} blur-[1px]`}
+                            style={{ left: `${sparkle.x}%`, top: `${sparkle.y}%` }}
+                            animate={{ opacity: colors.sparkleOpacity, scale: [1, 1.5, 1] }}
+                            transition={{ duration: sparkle.duration, repeat: Infinity, delay: sparkle.delay }}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {showOrbitals && (
+                <div className="absolute inset-0">
+                    {orbitals.map((orbital) => (
+                        <div key={orbital.id} className="absolute" style={{ left: orbital.x, top: orbital.y }}>
+                            <motion.div
+                                className={`rounded-full ${orbital.color} blur-[1px]`}
+                                style={{ width: orbital.dotSize, height: orbital.dotSize }}
+                                animate={{
+                                    x: [orbital.radius, 0, -orbital.radius, 0, orbital.radius],
+                                    y: [0, orbital.radius, 0, -orbital.radius, 0],
+                                    opacity: [0.2, 0.6, 0.2]
+                                }}
+                                transition={{ duration: orbital.duration, repeat: Infinity, ease: "linear" }}
+                            />
+                            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[1px] h-[1px] border border-white/5 rounded-full`} style={{ width: orbital.radius * 2, height: orbital.radius * 2 }} />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {showRipples && (
+                <div className="absolute inset-0">
+                    {ripples.map((ripple) => (
+                        <motion.div
+                            key={ripple.id}
+                            className={`absolute rounded-full border ${colors.purple.ripple} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`}
+                            initial={{ width: 0, height: 0, opacity: 0 }}
+                            animate={{
+                                width: [0, ripple.maxSize],
+                                height: [0, ripple.maxSize],
+                                opacity: colors.rippleOpacity
+                            }}
+                            transition={{ duration: ripple.duration, repeat: Infinity, delay: ripple.delay, ease: "easeOut" }}
                         />
                     ))}
                 </div>

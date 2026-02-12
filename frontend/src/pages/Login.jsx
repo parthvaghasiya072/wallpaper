@@ -1,10 +1,12 @@
-/* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiCheck } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import toast, { Toaster } from 'react-hot-toast';
 import AnimatedBackground from '../components/AnimatedBackground';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { loginUser, registerUser } from '../redux/slices/authSlice';
 
 const AnimatedInput = ({ icon: Icon, type, placeholder, value, onChange, name }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -15,8 +17,8 @@ const AnimatedInput = ({ icon: Icon, type, placeholder, value, onChange, name })
         <div className="w-full group">
             <div
                 className={`flex items-center gap-3 px-4 py-3 sm:py-3.5 rounded-2xl transition-all duration-300 border backdrop-blur-md ${isFocused
-                        ? 'bg-black/40 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.1)]'
-                        : 'bg-black/20 border-white/5 hover:border-white/20'
+                    ? 'bg-black/40 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.1)]'
+                    : 'bg-black/20 border-white/5 hover:border-white/20'
                     }`}
             >
                 <Icon className={`text-lg transition-colors duration-300 ${isFocused ? 'text-purple-400' : 'text-white/20'}`} />
@@ -49,11 +51,13 @@ const AnimatedInput = ({ icon: Icon, type, placeholder, value, onChange, name })
 };
 
 const Login = () => {
-    const [isLogin, setIsLogin] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { isLoading, user } = useSelector((state) => state.auth);
 
-    const [loginData, setLoginData] = useState({ email: '', password: '' });
-    const [registerData, setRegisterData] = useState({
+    const [isLogin, setIsLogin] = useState(true);
+
+    const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
         email: '',
@@ -61,34 +65,33 @@ const Login = () => {
         confirmPassword: '',
     });
 
-    const handleLoginChange = (e) => setLoginData({ ...loginData, [e.target.name]: e.target.value });
-    const handleRegisterChange = (e) => setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+    useEffect(() => {
+        if (user) {
+            if (user.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
+        }
+    }, [user, navigate]);
 
-    const handleLogin = async (e) => {
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const handleAuth = async (e) => {
         e.preventDefault();
-        if (!loginData.email || !loginData.password) return toast.error('Please fill in all fields');
-        setIsLoading(true);
-        // Local Identity Protocol Simulation
-        setTimeout(() => {
-            toast.success(`Welcome back!`);
-            setIsLoading(false);
-        }, 1500);
-    };
+        const { firstName, lastName, email, password, confirmPassword } = formData;
 
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        const { firstName, lastName, email, password, confirmPassword } = registerData;
-        if (!firstName || !lastName || !email || !password || !confirmPassword) return toast.error('Please fill in all fields');
-        if (password !== confirmPassword) return toast.error('Passwords do not match');
-        if (password.length < 6) return toast.error('Password must be at least 6 characters');
+        if (isLogin) {
+            if (!email || !password) return toast.error('Please fill in all fields');
+            dispatch(loginUser({ email, password }));
+        } else {
+            if (!firstName || !lastName || !email || !password || !confirmPassword) return toast.error('Please fill in all fields');
+            if (password !== confirmPassword) return toast.error('Passwords do not match');
+            if (password.length < 6) return toast.error('Password must be at least 6 characters');
 
-        setIsLoading(true);
-        // Local Onboarding Simulation
-        setTimeout(() => {
-            toast.success('Account created successfully!');
-            setIsLoading(false);
-            setIsLogin(true);
-        }, 2000);
+            const result = await dispatch(registerUser({ firstName, lastName, email, password }));
+            if (registerUser.fulfilled.match(result)) setIsLogin(true);
+        }
     };
 
     return (
@@ -149,11 +152,11 @@ const Login = () => {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: 10 }}
-                                        onSubmit={handleLogin}
+                                        onSubmit={handleAuth}
                                         className="space-y-4 sm:space-y-5"
                                     >
-                                        <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={loginData.email} onChange={handleLoginChange} delay={0.1} />
-                                        <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={loginData.password} onChange={handleLoginChange} delay={0.2} />
+                                        <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={formData.email} onChange={handleChange} />
+                                        <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} />
 
                                         <div className="flex justify-end pr-1">
                                             <button type="button" className="text-[10px] sm:text-xs text-purple-400 hover:text-purple-300 transition-colors font-medium">
@@ -187,16 +190,16 @@ const Login = () => {
                                         initial={{ opacity: 0, x: 10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -10 }}
-                                        onSubmit={handleRegister}
+                                        onSubmit={handleAuth}
                                         className="space-y-3 sm:space-y-4"
                                     >
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <AnimatedInput icon={FiUser} type="text" placeholder="First Name" name="firstName" value={registerData.firstName} onChange={handleRegisterChange} delay={0.05} />
-                                            <AnimatedInput icon={FiUser} type="text" placeholder="Last Name" name="lastName" value={registerData.lastName} onChange={handleRegisterChange} delay={0.1} />
+                                            <AnimatedInput icon={FiUser} type="text" placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
+                                            <AnimatedInput icon={FiUser} type="text" placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
                                         </div>
-                                        <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={registerData.email} onChange={handleRegisterChange} delay={0.15} />
-                                        <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={registerData.password} onChange={handleRegisterChange} delay={0.2} />
-                                        <AnimatedInput icon={FiCheck} type="password" placeholder="Confirm Password" name="confirmPassword" value={registerData.confirmPassword} onChange={handleRegisterChange} delay={0.25} />
+                                        <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={formData.email} onChange={handleChange} />
+                                        <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} />
+                                        <AnimatedInput icon={FiCheck} type="password" placeholder="Confirm Password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
 
                                         <motion.button
                                             type="submit"
@@ -265,8 +268,7 @@ const Login = () => {
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
                 
                 * { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-                /* Definitive Fix for Inset Autofill Appearance */
+                
                 input:-webkit-autofill,
                 input:-webkit-autofill:hover, 
                 input:-webkit-autofill:focus, 
@@ -279,7 +281,6 @@ const Login = () => {
 
                 input::placeholder { color: rgba(167, 139, 250, 0.15); }
 
-                /* Hide Scrollbars */
                 ::-webkit-scrollbar { display: none; }
                 
                 ::selection {
