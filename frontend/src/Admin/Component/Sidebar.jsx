@@ -22,7 +22,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark }) => {
     const menuItems = [
         { icon: FiHome, label: 'Dashboard', path: '/admin' },
         { icon: FiImage, label: 'Products', path: '/admin/products' },
-        { icon: FiGrid, label: 'Categories', path: '/admin/categories' },
+        { icon: FiGrid, label: 'Categories', path: '/admin/category' },
         { icon: FiUsers, label: 'Users', path: '/admin/users' },
         { icon: FiActivity, label: 'Sales', path: '/admin/sales' },
         { icon: FiSettings, label: 'Settings', path: '/admin/settings' },

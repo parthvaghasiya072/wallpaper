@@ -10,10 +10,13 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const path = require('path');
 
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 // Routes
 app.use('/api/user', require('./routes/User.route.js'));

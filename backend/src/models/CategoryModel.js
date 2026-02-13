@@ -8,6 +8,15 @@ const categorySchema = new mongoose.Schema({
     categoryImage: {
         type: String,
         required: true
+    },
+    categoryStatus: {
+        type: String,
+        enum: ["Active", "Inactive"],
+        default: "Active"
+    },
+    categoryDescription: {
+        type: String,
+        required: true
     }
 }, {
     timestamps: true

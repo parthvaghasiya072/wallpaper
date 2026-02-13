@@ -12,7 +12,6 @@ import {
     FiArrowUp,
     FiArrowDown
 } from 'react-icons/fi';
-import { BiSort } from 'react-icons/bi';
 
 const CommonTable = ({
     columns,
@@ -22,12 +21,20 @@ const CommonTable = ({
     onDelete,
     searchPlaceholder = "Scan database...",
     isDark = false,
-    itemsPerPage = 10
+    itemsPerPage = 10,
+    serverTotalPages,
+    serverCurrentPage,
+    onPageChange,
+    onRowsPerPageChange,
+    totalRecordsCount
 }) => {
+    const isServerSide = serverTotalPages !== undefined;
     const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
+    const [localCurrentPage, setLocalCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(itemsPerPage);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+    const activePage = isServerSide ? serverCurrentPage : localCurrentPage;
 
     // 1. Search Logic
     const filteredData = useMemo(() => {
@@ -59,11 +66,12 @@ const CommonTable = ({
     }, [filteredData, sortConfig]);
 
     // 3. Pagination Logic
-    const totalPages = Math.ceil(sortedData.length / rowsPerPage);
+    const totalPages = isServerSide ? serverTotalPages : Math.ceil(sortedData.length / rowsPerPage);
     const paginatedData = useMemo(() => {
-        const start = (currentPage - 1) * rowsPerPage;
+        if (isServerSide) return sortedData; // Data is already paginated from server
+        const start = (localCurrentPage - 1) * rowsPerPage;
         return sortedData.slice(start, start + rowsPerPage);
-    }, [sortedData, currentPage, rowsPerPage]);
+    }, [sortedData, localCurrentPage, rowsPerPage, isServerSide]);
 
     const handleSort = (accessor) => {
         let direction = 'asc';
@@ -75,19 +83,34 @@ const CommonTable = ({
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
+            if (isServerSide) {
+                onPageChange?.(page);
+            } else {
+                setLocalCurrentPage(page);
+            }
         }
     };
 
-    // Reset page when filtering/rows change
+    const handleRowsPerPageChange = (v) => {
+        setRowsPerPage(v);
+        onRowsPerPageChange?.(v);
+        if (isServerSide) {
+            onPageChange?.(1); // Reset to first page
+        } else {
+            setLocalCurrentPage(1);
+        }
+    }
+
     useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm, rowsPerPage]);
+        if (!isServerSide) setLocalCurrentPage(1);
+    }, [searchTerm, rowsPerPage, isServerSide]);
 
     return (
         <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             {/* Ultra-Modern Capsule Search Bar */}
-            <div className={`rounded-lg transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl ${isDark ? 'bg-slate-900/80 border-slate-800 shadow-black/20 backdrop-blur-xl' : ' border-slate-100 shadow-slate-200/50 backdrop-blur-xl'
+            <div className={`rounded-lg transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-4 p-2 shadow-2xl ${isDark
+                    ? 'bg-slate-900/40 border border-slate-800/50 backdrop-blur-2xl'
+                    : 'bg-white/80 border border-slate-200/60 backdrop-blur-2xl shadow-slate-200/40'
                 }`}>
                 <div className="relative group w-full md:w-1/2">
                     <FiSearch className={`absolute left-6 top-1/2 -translate-y-1/2 transition-all duration-300 ${isDark ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-600'
@@ -106,32 +129,34 @@ const CommonTable = ({
 
                 <div className="flex items-center gap-6 px-6">
                     <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Active Streams</span>
+                        <span className="text-[10px] font-black tracking-[0.3em] opacity-30">Active Streams</span>
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                            <span className="text-sm font-black font-mono">{sortedData.length} records</span>
+                            <span className="text-sm font-black font-mono">{isServerSide ? totalRecordsCount : sortedData.length} records</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Table Core with System Grid */}
-            <div className={`rounded-lg border overflow-hidden transition-all duration-700 shadow-2xl ${isDark ? 'bg-slate-900/40 border-slate-800/50' : 'bg-white border-slate-200/50 shadow-slate-200/20'
+            <div className={`rounded-lg border overflow-hidden transition-all duration-700 shadow-2xl ${isDark
+                    ? 'bg-slate-900/20 border-slate-800/50 backdrop-blur-xl'
+                    : 'bg-white border-slate-200/50 shadow-slate-200/20'
                 }`}>
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse min-w-[900px]">
                         <thead>
-                            <tr className={`${isDark ? 'bg-slate-950/50' : 'bg-slate-50/80 text-slate-500'}`}>
+                            <tr className={`border-b-2 ${isDark ? 'bg-slate-950/40 border-slate-800/50' : 'bg-slate-50/50 border-slate-100 text-slate-500'}`}>
                                 {columns.map((col, idx) => {
                                     const isSorted = sortConfig.key === col.accessor;
                                     return (
                                         <th
                                             key={idx}
                                             onClick={() => handleSort(col.accessor)}
-                                            className="px-5 py-3 text-[10px] font-black uppercase tracking-[0.4em] cursor-pointer whitespace-nowrap group transition-all"
+                                            className="px-5 py-3 text-[16px] font-black tracking-[0.2em] cursor-pointer whitespace-nowrap group transition-all"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className={`${isSorted ? 'text-indigo-500' : 'opacity-40 group-hover:opacity-100'}`}>
+                                                <span className={`${isSorted ? 'text-indigo-500' : 'group-hover:opacity-100'}`}>
                                                     {col.header}
                                                 </span>
                                                 <div className="flex flex-col gap-0.5">
@@ -142,10 +167,10 @@ const CommonTable = ({
                                         </th>
                                     );
                                 })}
-                                <th className="px-5 py-3 text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Operations</th>
+                                <th className="px-8 py-6 text-[11px] font-black tracking-[0.3em] uppercase opacity-50">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className={`divide-y-2 ${isDark ? 'divide-slate-800/30' : 'divide-slate-50'}`}>
+                        <tbody className={`divide-y ${isDark ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
                             <AnimatePresence mode="popLayout">
                                 {paginatedData.length > 0 ? paginatedData.map((item, rowIndex) => (
                                     <motion.tr
@@ -154,10 +179,10 @@ const CommonTable = ({
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         transition={{ type: 'spring', stiffness: 100, damping: 15, delay: rowIndex * 0.05 }}
-                                        className={`group transition-all duration-500 ${isDark ? 'hover:bg-indigo-500/5' : 'hover:bg-indigo-50/50'}`}
+                                        className={`group transition-all duration-500 ${isDark ? 'hover:bg-indigo-500/5' : 'hover:bg-slate-50/80'}`}
                                     >
                                         {columns.map((col, colIdx) => (
-                                            <td key={colIdx} className="px-5 py-3 whitespace-nowrap">
+                                            <td key={colIdx} className="px-8 py-5 whitespace-nowrap">
                                                 {col.render ? (
                                                     <div className="transition-transform duration-300 group-hover:translate-x-1">{col.render(item)}</div>
                                                 ) : (
@@ -168,13 +193,13 @@ const CommonTable = ({
                                             </td>
                                         ))}
 
-                                        <td className="px-5 py-3">
-                                            <div className="flex items-center justify-start gap-3">
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center justify-start gap-5">
                                                 <motion.button
                                                     whileHover={{ scale: 1.2, rotate: 5 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={() => onView?.(item)}
-                                                    className={`p-3 rounded-lg transition-all shadow-lg shadow-transparent hover:shadow-indigo-500/20 ${isDark ? 'bg-slate-800/50 text-indigo-400 hover:bg-indigo-500 hover:text-white' : 'bg-slate-100 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                                                    className={`transition-all ${isDark ? 'text-indigo-400 hover:text-white' : 'text-indigo-600 hover:text-white'
                                                         }`}
                                                 >
                                                     <FiEye size={18} />
@@ -183,7 +208,7 @@ const CommonTable = ({
                                                     whileHover={{ scale: 1.2, rotate: -5 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={() => onEdit?.(item)}
-                                                    className={`p-3 rounded-lg transition-all shadow-lg shadow-transparent hover:shadow-emerald-500/20 ${isDark ? 'bg-slate-800/50 text-emerald-400 hover:bg-emerald-500 hover:text-white' : 'bg-slate-100 text-emerald-600 hover:bg-emerald-600 hover:text-white'
+                                                    className={`transition-all ${isDark ? 'text-emerald-400 hover:text-white' : 'text-emerald-600 hover:text-white'
                                                         }`}
                                                 >
                                                     <FiEdit3 size={18} />
@@ -192,7 +217,7 @@ const CommonTable = ({
                                                     whileHover={{ scale: 1.2 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={() => onDelete?.(item)}
-                                                    className={`p-3 rounded-lg transition-all shadow-lg shadow-transparent hover:shadow-rose-500/20 ${isDark ? 'bg-slate-800/50 text-rose-400 hover:bg-rose-500 hover:text-white' : 'bg-slate-100 text-rose-600 hover:bg-rose-600 hover:text-white'
+                                                    className={`transition-all ${isDark ? 'text-rose-400 hover:text-white' : 'text-rose-600 hover:text-white'
                                                         }`}
                                                 >
                                                     <FiTrash2 size={18} />
@@ -211,7 +236,7 @@ const CommonTable = ({
                                                 <div className="p-8 rounded-full bg-slate-500/5 border border-dashed border-slate-500/20">
                                                     <FiSearch size={48} className="opacity-20" />
                                                 </div>
-                                                <h3 className="text-xl font-black uppercase tracking-widest mt-4">Zero Matches</h3>
+                                                <h3 className="text-xl font-black tracking-widest mt-4">Zero Matches</h3>
                                                 <p className="text-xs font-bold opacity-40 max-w-xs">Adjust your search parameters to find the records you're looking for.</p>
                                             </motion.div>
                                         </td>
@@ -223,63 +248,53 @@ const CommonTable = ({
                 </div>
             </div>
 
-            {/* Futuristic Aero-Dock Pagination */}
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-8 px-8">
-                <div className="flex items-center gap-1.5 p-1.5 rounded-[1.5rem] bg-slate-500/5 border border-slate-500/10 backdrop-blur-md">
-                    {[5, 10, 20].map((v) => (
-                        <button
-                            key={v}
-                            onClick={() => setRowsPerPage(v)}
-                            className={`px-6 py-2 rounded-xl text-[10px] font-black transition-all duration-500 ${rowsPerPage === v
-                                ? 'bg-indigo-600 text-white shadow-[0_10px_20px_rgba(79,70,229,0.3)] scale-110'
-                                : 'text-slate-500 hover:text-indigo-500 hover:bg-indigo-500/5'
-                                }`}
-                        >
-                            {v} <span className="text-[8px] opacity-40 uppercase ml-1">Rows</span>
-                        </button>
-                    ))}
-                </div>
-
-                <div className={`p-2 rounded-[2rem] border backdrop-blur-2xl flex items-center gap-3 shadow-2xl ${isDark ? 'bg-slate-900 shadow-black border-slate-800' : 'bg-white shadow-slate-200/50 border-slate-100'
-                    }`}>
-                    <button
-                        disabled={currentPage === 1}
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        className={`p-3.5 rounded-2xl transition-all duration-500 disabled:opacity-5 ${isDark ? 'hover:bg-white hover:text-black' : 'hover:bg-slate-900 hover:text-white'
-                            }`}
-                    >
-                        <FiChevronLeft size={22} />
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                        {[...Array(totalPages)].map((_, i) => (
+            {/* Simplified Modern Pagination */}
+            <div className={`px-8 py-6 flex flex-col sm:flex-row items-center rounded-lg justify-between gap-6 ${isDark ? 'bg-slate-950/20 border-t border-slate-800/50' : 'bg-slate-50/30 border-t border-slate-100'}`}>
+                <div className="flex items-center gap-4">
+                    <span className={`text-xs font-bold tracking-widest opacity-40 ${isDark ? 'text-white' : 'text-slate-900'}`}>Rows:</span>
+                    <div className="flex items-center gap-1">
+                        {[5, 10, 20].map((v) => (
                             <button
-                                key={i}
-                                onClick={() => handlePageChange(i + 1)}
-                                className={`w-12 h-12 rounded-2xl text-xs font-black transition-all duration-500 border-2 ${currentPage === i + 1
-                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-[0_15px_30px_rgba(79,70,229,0.4)] scale-110 -translate-y-1'
-                                    : (isDark ? 'bg-slate-950 border-transparent text-slate-600 hover:text-white hover:border-indigo-500/50' : 'bg-slate-50 border-transparent text-slate-400 hover:text-indigo-600 hover:border-indigo-600/30')
+                                key={v}
+                                onClick={() => handleRowsPerPageChange(v)}
+                                className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${rowsPerPage === v
+                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                    : (isDark ? 'text-slate-500 hover:text-white hover:bg-slate-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50')
                                     }`}
                             >
-                                {String(i + 1).padStart(2, '0')}
+                                {v}
                             </button>
                         ))}
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        disabled={activePage === 1}
+                        onClick={() => handlePageChange(activePage - 1)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all disabled:opacity-10 ${isDark ? 'border-slate-800 text-slate-400 hover:bg-white hover:text-black' : 'border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white'}`}
+                    >
+                        <FiChevronLeft size={18} />
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        <span className={`px-4 py-2 rounded-xl text-xs font-black border uppercase tracking-widest ${isDark ? 'bg-slate-950 border-slate-800 text-indigo-400' : 'bg-slate-50 border-slate-200 text-indigo-600'}`}>
+                            {activePage} <span className="opacity-30 mx-1">/</span> {totalPages || 1}
+                        </span>
+                    </div>
 
                     <button
-                        disabled={currentPage === totalPages || totalPages === 0}
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        className={`p-3.5 rounded-2xl transition-all duration-500 disabled:opacity-5 ${isDark ? 'hover:bg-white hover:text-black' : 'hover:bg-slate-900 hover:text-white'
-                            }`}
+                        disabled={activePage === totalPages || totalPages === 0}
+                        onClick={() => handlePageChange(activePage + 1)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all disabled:opacity-10 ${isDark ? 'border-slate-800 text-slate-400 hover:bg-white hover:text-black' : 'border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white'}`}
                     >
-                        <FiChevronRight size={22} />
+                        <FiChevronRight size={18} />
                     </button>
                 </div>
 
-                <div className="text-right hidden lg:block">
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-20 block mb-1">Index Navigator</span>
-                    <span className="text-sm font-black font-mono tracking-tighter text-indigo-500">
-                        {Math.min((currentPage - 1) * rowsPerPage + 1, sortedData.length)} — {Math.min(currentPage * rowsPerPage, sortedData.length)}
+                <div className="hidden md:block">
+                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-30 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        Displaying {Math.min((activePage - 1) * rowsPerPage + 1, totalRecordsCount || 0)} - {Math.min(activePage * rowsPerPage, totalRecordsCount || 0)} <span className="mx-1">of</span> {totalRecordsCount || 0}
                     </span>
                 </div>
             </div>

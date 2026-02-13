@@ -4,6 +4,7 @@ import Admin from '../Admin/Pages/Admin';
 import Product from '../Admin/Pages/Product';
 import AdminLayout from '../Admin/Layout/AdminLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
+import Category from '../Admin/Pages/Category';
 
 const AdminRoutes = () => {
     return (
@@ -12,6 +13,7 @@ const AdminRoutes = () => {
                 <Route element={<AdminLayout />}>
                     <Route index element={<Admin />} />
                     <Route path="products" element={<Product />} />
+                    <Route path="category" element={<Category />} />
                     {/* Add more admin category routes here */}
                 </Route>
             </Route>

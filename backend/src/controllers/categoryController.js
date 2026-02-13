@@ -1,16 +1,19 @@
 const Category = require("../models/CategoryModel");
 
-const creareCategory = async (req, res) => {
-    const { categoryName, categoryImage } = req.body;
+const createCategory = async (req, res) => {
+    const { categoryName, categoryDescription, categoryStatus } = req.body;
+    const categoryImageFile = req.file;
 
-    if (!categoryName || !categoryImage) {
+    if (!categoryName || !categoryDescription || !categoryStatus || !categoryImageFile) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
     try {
         const category = await Category.create({
             categoryName,
-            categoryImage
+            categoryImage: `/uploads/${categoryImageFile.filename}`,
+            categoryDescription,
+            categoryStatus
         });
         res.status(201).json(category);
     } catch (error) {
@@ -29,20 +32,20 @@ const getAllCategory = async (req, res) => {
 }
 
 const getSingleCategoryById = async (req, res) => {
-    try{
+    try {
         const category = await Category.findById(req.params.id);
-        if(!category){
-            return res.status(404).json({message: "Category not found"});
+        if (!category) {
+            return res.status(404).json({ message: "Category not found" });
         }
         res.status(200).json(category);
     }
-    catch(error){
-        res.status(500).json({message: error.message});
+    catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
 
 module.exports = {
-    creareCategory,
+    createCategory,
     getAllCategory,
     getSingleCategoryById
 }
