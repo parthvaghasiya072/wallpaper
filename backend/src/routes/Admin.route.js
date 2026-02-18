@@ -12,5 +12,8 @@ router.post("/updateProduct/:id", upload.array("images", 10), updateProduct);
 
 // Category
 router.post("/createCategory", upload.single("categoryImage"), createCategory);
+router.put("/updateCategory/:id", upload.single("categoryImage"), updateCategory);
+router.delete("/deleteCategory/:id", deleteCategory);
+
 
 module.exports = router;
