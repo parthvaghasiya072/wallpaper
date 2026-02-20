@@ -5,13 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useOutletContext } from 'react-router-dom';
 import {
     FiPlus, FiGrid, FiList, FiTable,
-    FiEye, FiEdit3, FiTrash2, FiLayers
+    FiEye, FiEdit3, FiTrash2, FiLayers,
+    FiBox, FiActivity, FiPaperclip
 } from 'react-icons/fi';
 
 // Components
 import CommonTable from '../Component/CommonTable';
-import ProductDetailModal from '../Component/ProductDetailModal';
+import CommonViewModal from '../Component/CommonViewModal';
 import AddProductModal from '../Component/AddProductModal';
+import CommonDeleteModal from '../Component/CommonDeleteModal';
 
 const Product = () => {
     const { isDark } = useOutletContext();
@@ -23,6 +25,10 @@ const Product = () => {
     const [editingProduct, setEditingProduct] = useState(null);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    // Delete state
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState(null);
 
     useEffect(() => {
         dispatch(getAllProducts({ page: 1, limit: rowsPerPage }));
@@ -67,9 +73,16 @@ const Product = () => {
         }
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this catalog masterpiece? This action cannot be undone.')) {
-            dispatch(deleteProduct(id));
+    const handleDeleteInit = (id) => {
+        setProductToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (productToDelete) {
+            dispatch(deleteProduct(productToDelete)).then(() => {
+                setIsDeleteModalOpen(false);
+            });
         }
     };
 
@@ -79,8 +92,8 @@ const Product = () => {
             accessor: "titleName",
             render: (item) => (
                 <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg ${isDark ? 'bg-[#132846]' : 'bg-slate-100'} w-12 h-12 flex-shrink-0 overflow-hidden`}>
-                        <img src={item.images[0]?.startsWith('http') ? item.images[0] : `http://localhost:5000${item.images[0]}`} className="w-full h-full object-cover transition-transform duration-500 hover:scale-125" alt="" />
+                    <div className={`p-1 rounded-lg w-12 h-12 flex-shrink-0 overflow-hidden `}>
+                        <img src={item.images[0]?.startsWith('http') ? item.images[0] : `http://localhost:5000${item.images[0]}`} className="w-full h-full object-cover transition-transform duration-500 hover:scale-125 rounded-md" alt="" />
                     </div>
                     <div className="flex flex-col min-w-0">
                         <span className={` text-sm truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.titleName}</span>
@@ -172,7 +185,7 @@ const Product = () => {
                                 isDark={isDark}
                                 onView={(p) => { dispatch(getSingleProduct(p._id)); setActiveImageIndex(0); }}
                                 onEdit={(p) => { setEditingProduct(p); setIsModalOpen(true); }}
-                                onDelete={(p) => handleDelete(p._id)}
+                                onDelete={(p) => handleDeleteInit(p._id)}
                                 serverTotalPages={totalPages}
                                 serverCurrentPage={currentPage}
                                 totalRecordsCount={totalProducts}
@@ -206,7 +219,7 @@ const Product = () => {
                                                 {[
                                                     { icon: FiEye, action: () => { dispatch(getSingleProduct(product._id)); setActiveImageIndex(0); }, bg: 'hover:bg-slate-900' },
                                                     { icon: FiEdit3, action: () => { setEditingProduct(product); setIsModalOpen(true); }, bg: 'hover:bg-indigo-600' },
-                                                    { icon: FiTrash2, action: () => handleDelete(product._id), bg: 'hover:bg-rose-600' }
+                                                    { icon: FiTrash2, action: () => handleDeleteInit(product._id), bg: 'hover:bg-rose-600' }
                                                 ].map(({ icon: Icon, action, bg }, i) => (
                                                     <button key={i} onClick={action} className={`p-2 bg-white/20 backdrop-blur-md rounded-xl text-white transition-all shadow-lg ${bg}`}>
                                                         <Icon size={16} />
@@ -232,12 +245,45 @@ const Product = () => {
                 )}
             </div>
 
-            <ProductDetailModal
-                product={selectedProduct} isOpen={!!selectedProduct}
-                onClose={() => dispatch(clearSelectedProduct())} isDark={isDark}
-                activeImageIndex={activeImageIndex} setActiveImageIndex={setActiveImageIndex}
+            <CommonViewModal
+                isOpen={!!selectedProduct || detailLoading}
+                onClose={() => { dispatch(clearSelectedProduct()); setActiveImageIndex(0); }}
+                isDark={isDark}
+                title={selectedProduct?.titleName}
+                subtitle={selectedProduct?.category}
+                description={selectedProduct?.description}
+                images={selectedProduct?.images}
                 loading={detailLoading}
-            />
+                tags={[]}
+                stats={[
+                    { label: 'Inventory', value: `${selectedProduct?.stocks || 0} PCS`, icon: FiBox, color: isDark ? 'text-indigo-400' : 'text-indigo-600' },
+                    { label: 'Status', value: (selectedProduct?.stocks > 0 ? 'In Stock' : 'Out of Stock'), icon: FiActivity, color: selectedProduct?.stocks > 0 ? 'text-emerald-500' : 'text-rose-500' }
+                ]}
+            >
+                {selectedProduct?.paperOptions?.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-dashed border-slate-500/20">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Material Pricing</h4>
+                        <div className="space-y-2">
+                            {selectedProduct.paperOptions.map((opt, i) => (
+                                <div
+                                    key={i}
+                                    className={`flex items-center justify-between p-4 rounded-2xl border ${isDark ? 'bg-slate-800/20 border-slate-800' : 'bg-slate-50 border-slate-100'}`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                            <FiPaperclip size={18} />
+                                        </div>
+                                        <span className="text-sm font-black">{opt.paperType}</span>
+                                    </div>
+                                    <span className={`text-xl font-black ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                        ${opt.pricePerSqFt} <span className="text-[10px] opacity-30">/FT²</span>
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </CommonViewModal>
 
             <AddProductModal
                 isOpen={isModalOpen}
@@ -245,6 +291,16 @@ const Product = () => {
                 isDark={isDark}
                 onSubmitSuccess={handleSubmit}
                 editData={editingProduct}
+            />
+
+            <CommonDeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                isDark={isDark}
+                title="Remove Artwork?"
+                message="This will permanently delete this masterpiece from the catalog."
+                itemName={products.find(p => p._id === productToDelete)?.titleName}
             />
         </div>
     );

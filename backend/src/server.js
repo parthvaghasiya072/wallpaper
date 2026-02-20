@@ -17,7 +17,6 @@ app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-
 // Routes
 app.use('/api/user', require('./routes/User.route.js'));
 app.use('/api/admin', require('./routes/Admin.route.js'));

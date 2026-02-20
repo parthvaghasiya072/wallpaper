@@ -6,10 +6,14 @@ import ProtectedRoute from '../components/ProtectedRoute';
 const UserRoutes = () => {
     return (
         <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Home />} />
+
+            {/* Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
-                <Route path="/" element={<Home />} />
-                {/* Add more user routes here */}
+                {/* Add protected user routes here (e.g. Profile, Orders) */}
             </Route>
+
             {/* Fallback for undefined user paths */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

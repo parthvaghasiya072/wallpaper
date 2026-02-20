@@ -19,6 +19,9 @@ const CommonTable = ({
     onView,
     onEdit,
     onDelete,
+    showEdit = true,
+    showSearch = true,
+    showPagination = true,
     searchPlaceholder = "Scan database...",
     isDark = false,
     itemsPerPage = 10,
@@ -31,12 +34,17 @@ const CommonTable = ({
     const isServerSide = serverTotalPages !== undefined;
     const [searchTerm, setSearchTerm] = useState('');
     const [localCurrentPage, setLocalCurrentPage] = useState(1);
+    // ... (rest of state items are fine to keep, maybe reset localCurrentPage if showPagination changes but unlikely)
     const [rowsPerPage, setRowsPerPage] = useState(itemsPerPage);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
     const activePage = isServerSide ? serverCurrentPage : localCurrentPage;
 
-    // 1. Search Logic
+    // Check if any actions are enabled
+    const hasActions = onView || onEdit || onDelete;
+
+    // ... (Search, Sorting, Pagination Logic - keep as is) 
+
     const filteredData = useMemo(() => {
         if (!searchTerm) return data;
         return data.filter(item =>
@@ -51,7 +59,6 @@ const CommonTable = ({
         );
     }, [data, searchTerm, columns]);
 
-    // 2. Sorting Logic
     const sortedData = useMemo(() => {
         if (!sortConfig.key) return filteredData;
 
@@ -65,14 +72,15 @@ const CommonTable = ({
         });
     }, [filteredData, sortConfig]);
 
-    // 3. Pagination Logic
     const totalPages = isServerSide ? serverTotalPages : Math.ceil(sortedData.length / rowsPerPage);
     const paginatedData = useMemo(() => {
-        if (isServerSide) return sortedData; // Data is already paginated from server
+        if (!showPagination && !isServerSide) return sortedData; // Show all if pagination disabled locally
+        if (isServerSide) return sortedData;
         const start = (localCurrentPage - 1) * rowsPerPage;
         return sortedData.slice(start, start + rowsPerPage);
-    }, [sortedData, localCurrentPage, rowsPerPage, isServerSide]);
+    }, [sortedData, localCurrentPage, rowsPerPage, isServerSide, showPagination]);
 
+    // ... (Handlers)
     const handleSort = (accessor) => {
         let direction = 'asc';
         if (sortConfig.key === accessor && sortConfig.direction === 'asc') {
@@ -95,7 +103,7 @@ const CommonTable = ({
         setRowsPerPage(v);
         onRowsPerPageChange?.(v);
         if (isServerSide) {
-            onPageChange?.(1); // Reset to first page
+            onPageChange?.(1);
         } else {
             setLocalCurrentPage(1);
         }
@@ -108,40 +116,42 @@ const CommonTable = ({
     return (
         <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             {/* Ultra-Modern Capsule Search Bar */}
-            <div className={`rounded-lg transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-4 p-2 shadow-2xl ${isDark
+            {showSearch && (
+                <div className={`rounded-lg transition-all duration-500 flex flex-col md:flex-row items-center justify-between gap-4 p-2 shadow-2xl ${isDark
                     ? 'bg-slate-900/40 border border-slate-800/50 backdrop-blur-2xl'
                     : 'bg-white/80 border border-slate-200/60 backdrop-blur-2xl shadow-slate-200/40'
-                }`}>
-                <div className="relative group w-full md:w-1/2">
-                    <FiSearch className={`absolute left-6 top-1/2 -translate-y-1/2 transition-all duration-300 ${isDark ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-600'
-                        }`} size={20} />
-                    <input
-                        type="text"
-                        placeholder={searchPlaceholder}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`w-full pl-16 pr-8 py-4 rounded-lg outline-none transition-all text-sm font-bold tracking-tight border-2 ${isDark
-                            ? 'bg-slate-950/50 border-transparent focus:border-indigo-500/50 text-white placeholder:text-slate-700'
-                            : 'bg-slate-50/50 border-transparent focus:border-indigo-600/20 text-slate-900 placeholder:text-slate-400'
-                            }`}
-                    />
-                </div>
+                    }`}>
+                    <div className="relative group w-full md:w-1/2">
+                        <FiSearch className={`absolute left-6 top-1/2 -translate-y-1/2 transition-all duration-300 ${isDark ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-600'
+                            }`} size={20} />
+                        <input
+                            type="text"
+                            placeholder={searchPlaceholder}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={`w-full pl-16 pr-8 py-4 rounded-lg outline-none transition-all text-sm font-bold tracking-tight border-2 ${isDark
+                                ? 'bg-slate-950/50 border-transparent focus:border-indigo-500/50 text-white placeholder:text-slate-700'
+                                : 'bg-slate-50/50 border-transparent focus:border-indigo-600/20 text-slate-900 placeholder:text-slate-400'
+                                }`}
+                        />
+                    </div>
 
-                <div className="flex items-center gap-6 px-6">
-                    <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black tracking-[0.3em] opacity-30">Active Streams</span>
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                            <span className="text-sm font-black font-mono">{isServerSide ? totalRecordsCount : sortedData.length} records</span>
+                    <div className="flex items-center gap-6 px-6">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-black tracking-[0.3em] opacity-30">Active Streams</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                <span className="text-sm font-black font-mono">{isServerSide ? totalRecordsCount : sortedData.length} records</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Table Core with System Grid */}
             <div className={`rounded-lg border overflow-hidden transition-all duration-700 shadow-2xl ${isDark
-                    ? 'bg-slate-900/20 border-slate-800/50 backdrop-blur-xl'
-                    : 'bg-white border-slate-200/50 shadow-slate-200/20'
+                ? 'bg-slate-900/20 border-slate-800/50 backdrop-blur-xl'
+                : 'bg-white border-slate-200/50 shadow-slate-200/20'
                 }`}>
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse min-w-[900px]">
@@ -167,7 +177,7 @@ const CommonTable = ({
                                         </th>
                                     );
                                 })}
-                                <th className="px-8 py-6 text-[11px] font-black tracking-[0.3em] uppercase opacity-50">Actions</th>
+                                {hasActions && <th className="px-8 py-6 text-[11px] font-black tracking-[0.3em] uppercase opacity-50">Actions</th>}
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${isDark ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
@@ -182,7 +192,7 @@ const CommonTable = ({
                                         className={`group transition-all duration-500 ${isDark ? 'hover:bg-indigo-500/5' : 'hover:bg-slate-50/80'}`}
                                     >
                                         {columns.map((col, colIdx) => (
-                                            <td key={colIdx} className="px-8 py-5 whitespace-nowrap">
+                                            <td key={colIdx} className="px-5 py-3 whitespace-nowrap">
                                                 {col.render ? (
                                                     <div className="transition-transform duration-300 group-hover:translate-x-1">{col.render(item)}</div>
                                                 ) : (
@@ -193,37 +203,42 @@ const CommonTable = ({
                                             </td>
                                         ))}
 
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center justify-start gap-5">
-                                                <motion.button
-                                                    whileHover={{ scale: 1.2, rotate: 5 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    onClick={() => onView?.(item)}
-                                                    className={`transition-all ${isDark ? 'text-indigo-400 hover:text-white' : 'text-indigo-600 hover:text-white'
-                                                        }`}
-                                                >
-                                                    <FiEye size={18} />
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.2, rotate: -5 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    onClick={() => onEdit?.(item)}
-                                                    className={`transition-all ${isDark ? 'text-emerald-400 hover:text-white' : 'text-emerald-600 hover:text-white'
-                                                        }`}
-                                                >
-                                                    <FiEdit3 size={18} />
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.2 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    onClick={() => onDelete?.(item)}
-                                                    className={`transition-all ${isDark ? 'text-rose-400 hover:text-white' : 'text-rose-600 hover:text-white'
-                                                        }`}
-                                                >
-                                                    <FiTrash2 size={18} />
-                                                </motion.button>
-                                            </div>
-                                        </td>
+                                        {hasActions && (
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center justify-start gap-5">
+                                                    {onView && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.2, rotate: 5 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={() => onView(item)}
+                                                            className={`transition-all ${isDark ? 'text-indigo-400 hover:text-white' : 'text-indigo-600 hover:text-white'}`}
+                                                        >
+                                                            <FiEye size={18} />
+                                                        </motion.button>
+                                                    )}
+                                                    {showEdit && onEdit && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.2, rotate: -5 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={() => onEdit(item)}
+                                                            className={`transition-all ${isDark ? 'text-emerald-400 hover:text-white' : 'text-emerald-600 hover:text-white'}`}
+                                                        >
+                                                            <FiEdit3 size={18} />
+                                                        </motion.button>
+                                                    )}
+                                                    {onDelete && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.2 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={() => onDelete(item)}
+                                                            className={`transition-all ${isDark ? 'text-rose-400 hover:text-white' : 'text-rose-600 hover:text-white'}`}
+                                                        >
+                                                            <FiTrash2 size={18} />
+                                                        </motion.button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        )}
                                     </motion.tr>
                                 )) : (
                                     <tr>
@@ -249,55 +264,57 @@ const CommonTable = ({
             </div>
 
             {/* Simplified Modern Pagination */}
-            <div className={`px-8 py-6 flex flex-col sm:flex-row items-center rounded-lg justify-between gap-6 ${isDark ? 'bg-slate-950/20 border-t border-slate-800/50' : 'bg-slate-50/30 border-t border-slate-100'}`}>
-                <div className="flex items-center gap-4">
-                    <span className={`text-xs font-bold tracking-widest opacity-40 ${isDark ? 'text-white' : 'text-slate-900'}`}>Rows:</span>
-                    <div className="flex items-center gap-1">
-                        {[5, 10, 20].map((v) => (
-                            <button
-                                key={v}
-                                onClick={() => handleRowsPerPageChange(v)}
-                                className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${rowsPerPage === v
-                                    ? 'bg-indigo-600 text-white shadow-lg'
-                                    : (isDark ? 'text-slate-500 hover:text-white hover:bg-slate-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50')
-                                    }`}
-                            >
-                                {v}
-                            </button>
-                        ))}
+            {showPagination && (
+                <div className={`px-8 py-6 flex flex-col sm:flex-row items-center rounded-lg justify-between gap-6 ${isDark ? 'bg-slate-950/20 border-t border-slate-800/50' : 'bg-slate-50/30 border-t border-slate-100'}`}>
+                    <div className="flex items-center gap-4">
+                        <span className={`text-xs font-bold tracking-widest opacity-40 ${isDark ? 'text-white' : 'text-slate-900'}`}>Rows:</span>
+                        <div className="flex items-center gap-1">
+                            {[5, 10, 20].map((v) => (
+                                <button
+                                    key={v}
+                                    onClick={() => handleRowsPerPageChange(v)}
+                                    className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${rowsPerPage === v
+                                        ? 'bg-indigo-600 text-white shadow-lg'
+                                        : (isDark ? 'text-slate-500 hover:text-white hover:bg-slate-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50')
+                                        }`}
+                                >
+                                    {v}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        disabled={activePage === 1}
-                        onClick={() => handlePageChange(activePage - 1)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all disabled:opacity-10 ${isDark ? 'border-slate-800 text-slate-400 hover:bg-white hover:text-black' : 'border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white'}`}
-                    >
-                        <FiChevronLeft size={18} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={activePage === 1}
+                            onClick={() => handlePageChange(activePage - 1)}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all disabled:opacity-10 ${isDark ? 'border-slate-800 text-slate-400 hover:bg-white hover:text-black' : 'border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white'}`}
+                        >
+                            <FiChevronLeft size={18} />
+                        </button>
 
-                    <div className="flex items-center gap-1">
-                        <span className={`px-4 py-2 rounded-xl text-xs font-black border uppercase tracking-widest ${isDark ? 'bg-slate-950 border-slate-800 text-indigo-400' : 'bg-slate-50 border-slate-200 text-indigo-600'}`}>
-                            {activePage} <span className="opacity-30 mx-1">/</span> {totalPages || 1}
+                        <div className="flex items-center gap-1">
+                            <span className={`px-4 py-2 rounded-xl text-xs font-black border uppercase tracking-widest ${isDark ? 'bg-slate-950 border-slate-800 text-indigo-400' : 'bg-slate-50 border-slate-200 text-indigo-600'}`}>
+                                {activePage} <span className="opacity-30 mx-1">/</span> {totalPages || 1}
+                            </span>
+                        </div>
+
+                        <button
+                            disabled={activePage === totalPages || totalPages === 0}
+                            onClick={() => handlePageChange(activePage + 1)}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all disabled:opacity-10 ${isDark ? 'border-slate-800 text-slate-400 hover:bg-white hover:text-black' : 'border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white'}`}
+                        >
+                            <FiChevronRight size={18} />
+                        </button>
+                    </div>
+
+                    <div className="hidden md:block">
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-30 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            Displaying {Math.min((activePage - 1) * rowsPerPage + 1, totalRecordsCount || 0)} - {Math.min(activePage * rowsPerPage, totalRecordsCount || 0)} <span className="mx-1">of</span> {totalRecordsCount || 0}
                         </span>
                     </div>
-
-                    <button
-                        disabled={activePage === totalPages || totalPages === 0}
-                        onClick={() => handlePageChange(activePage + 1)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all disabled:opacity-10 ${isDark ? 'border-slate-800 text-slate-400 hover:bg-white hover:text-black' : 'border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white'}`}
-                    >
-                        <FiChevronRight size={18} />
-                    </button>
                 </div>
-
-                <div className="hidden md:block">
-                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-30 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        Displaying {Math.min((activePage - 1) * rowsPerPage + 1, totalRecordsCount || 0)} - {Math.min(activePage * rowsPerPage, totalRecordsCount || 0)} <span className="mx-1">of</span> {totalRecordsCount || 0}
-                    </span>
-                </div>
-            </div>
+            )}
         </div>
     );
 };
