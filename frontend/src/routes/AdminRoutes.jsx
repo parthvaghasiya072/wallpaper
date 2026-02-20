@@ -8,6 +8,7 @@ import Category from '../Admin/Pages/Category';
 import HeroSection from '../Admin/Pages/HeroSection';
 import HomePage from '../Admin/Pages/HomePage'; // Import HomePage
 import Users from '../Admin/Pages/User';
+import Tags from '../Admin/Pages/Tags';
 
 const AdminRoutes = () => {
     return (
@@ -20,6 +21,7 @@ const AdminRoutes = () => {
                     <Route path="users" element={<Users />} />
                     <Route path="home" element={<HomePage />} /> {/* Restore Home Page */}
                     <Route path="home/hero" element={<HeroSection />} />
+                    <Route path="home/tags" element={<Tags />} />
                 </Route>
             </Route>
             {/* Fallback for undefined admin paths */}

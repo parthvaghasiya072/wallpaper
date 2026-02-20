@@ -6,6 +6,7 @@ const { getAllCategory, getSingleCategoryById } = require("../controllers/catego
 const { getAllUsers, getUserById, updateUser } = require("../controllers/userController");
 const upload = require("../middleware/upload");
 const { getHeroSections } = require("../controllers/heroController");
+const { getAllTags } = require("../controllers/tagController");
 
 // product
 router.get("/getAllProducts", getAllProducts);
@@ -23,5 +24,7 @@ router.put("/updateUser/:id", upload.single("photo"), updateUser);
 //Hero
 router.get("/getHeroSections", getHeroSections);
 
+//Tags
+router.get("/getAllTags", getAllTags);
 
 module.exports = router;

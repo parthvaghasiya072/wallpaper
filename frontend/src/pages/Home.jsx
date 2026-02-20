@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowRight, FiCheck, FiHeart } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
@@ -74,7 +75,7 @@ const Home = () => {
                                     alt={heroSections[currentIndex].title}
                                     className="w-full h-full object-cover"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-r from-black/30  to-transparent"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10  to-transparent"></div>
                             </div>
 
                             {/* Hero Content */}

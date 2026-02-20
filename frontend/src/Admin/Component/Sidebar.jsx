@@ -30,7 +30,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark }) => {
             label: 'Home',
             path: '/admin/home',
             submenu: [
-                { label: 'Hero Section', path: '/admin/home/hero' }
+                { label: 'Hero Section', path: '/admin/home/hero' },
+                { label: 'Tags', path: '/admin/home/tags' }
             ]
         },
     ];
@@ -147,7 +148,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark }) => {
                                                         navigate(subItem.path);
                                                         if (isMobile) setIsSidebarOpen(false);
                                                     }}
-                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all relative ml-3 ${location.pathname === subItem.path
+                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold  tracking-wider rounded-xl transition-all relative ml-3 ${location.pathname === subItem.path
                                                         ? 'text-indigo-600 bg-indigo-50/50'
                                                         : (isDark ? 'text-slate-500 hover:text-indigo-400' : 'text-slate-400 hover:text-indigo-600')
                                                         }`}

@@ -21,6 +21,7 @@ const {
 
 const upload = require("../middleware/upload");
 const { createHeroSection, getHeroSections, updateHeroSection, deleteHeroSection } = require("../controllers/heroController");
+const { createTag, getTagById, updateTagById, deleteTagById } = require("../controllers/tagController");
 
 // --- Product Routes ---
 router.post("/createProduct", upload.array("images", 10), createProduct);
@@ -42,5 +43,11 @@ router.delete("/deleteUserById/:id", deleteUser);
 router.post("/createHeroSection", upload.single("image"), createHeroSection);
 router.put("/updateHeroSection/:id", upload.single("image"), updateHeroSection);
 router.delete("/deleteHeroSection/:id", deleteHeroSection);
+
+// Tags
+router.post("/createTag", createTag);
+router.get("/getTagById/:id", getTagById);
+router.put("/updateTagById/:id", updateTagById);
+router.delete("/deleteTagById/:id", deleteTagById);
 
 module.exports = router;
