@@ -52,72 +52,72 @@ const Home = () => {
             <Header />
 
             {/* Hero Section */}
-            <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-gray-900">
-                <AnimatePresence mode='wait'>
+            <section className="relative h-screen min-h-[600px] flex items-center justify-start overflow-hidden bg-gray-900">
+                <AnimatePresence>
                     {heroSections && heroSections.length > 0 ? (
                         <motion.div
                             key={heroSections[currentIndex]._id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 1 }}
+                            transition={{ duration: 1, ease: "easeInOut" }}
                             className="absolute inset-0"
                         >
                             {/* Background Image with Overlay */}
                             <div className="absolute inset-0 z-0">
                                 <motion.img
                                     key={`img-${heroSections[currentIndex]._id}`}
-                                    initial={{ scale: 1.1, opacity: 0 }}
+                                    initial={{ scale: 1.05, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ duration: 1.5, ease: "easeOut" }}
                                     src={getImageUrl(heroSections[currentIndex].image)}
                                     alt={heroSections[currentIndex].title}
                                     className="w-full h-full object-cover"
                                 />
-                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/30  to-transparent"></div>
                             </div>
 
                             {/* Hero Content */}
-                            <div className="relative z-10 h-full flex items-center justify-center text-center px-4 max-w-5xl mx-auto">
-                                <div className="space-y-6">
+                            <div className="relative z-10 h-full flex items-center justify-start text-left px-6 md:px-20 text-wrap w-full">
+                                <div className="space-y-6 max-w-4xl">
                                     <motion.span
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5, duration: 0.8 }}
-                                        className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-white text-[10px] font-black uppercase tracking-[0.3em] border border-white/20 shadow-2xl"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3, duration: 0.6 }}
+                                        className="inline-block px-4 py-1.5 bg-orange-500/20 backdrop-blur-md rounded-full text-orange-300 text-[10px] font-black uppercase tracking-[0.3em] border border-orange-500/30 shadow-2xl"
                                     >
                                         Featured Collection
                                     </motion.span>
                                     <motion.h1
-                                        initial={{ opacity: 0, y: 30 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.7, duration: 0.8 }}
-                                        className="text-5xl md:text-7xl lg:text-9xl font-serif text-white leading-[0.9] tracking-tighter"
+                                        initial={{ opacity: 0, x: 30 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.5, duration: 0.7 }}
+                                        className="text-4xl md:text-5xl lg:text-[100px] font-serif text-orange-400 leading-[1] tracking-tighter"
                                     >
                                         {heroSections[currentIndex].title.split(' ').map((word, i) => (
-                                            <span key={i} className={i % 2 !== 0 ? "italic font-light block md:inline" : "font-black"}>
+                                            <span key={i} className={i % 2 !== 0 ? "italic font-light" : "font-black"}>
                                                 {word}{' '}
                                             </span>
                                         ))}
                                     </motion.h1>
                                     <motion.p
-                                        initial={{ opacity: 0, y: 30 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.9, duration: 0.8 }}
-                                        className="text-lg md:text-2xl text-white/80 max-w-2xl mx-auto font-light leading-relaxed tracking-wide"
+                                        initial={{ opacity: 0, x: 30 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.7, duration: 0.7 }}
+                                        className="text-sm md:text-lg text-white font-medium leading-relaxed tracking-wide"
                                     >
                                         {heroSections[currentIndex].description}
                                     </motion.p>
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 1.1, duration: 0.8 }}
-                                        className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8"
+                                        transition={{ delay: 0.9, duration: 0.6 }}
+                                        className="flex flex-col sm:flex-row items-center justify-start gap-4 pt-4"
                                     >
-                                        <button className="group px-10 py-5 bg-white text-gray-900 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-600 hover:text-white transition-all duration-500 shadow-2xl flex items-center gap-3">
-                                            Shop Collection <FiArrowRight className="group-hover:translate-x-2 transition-transform" />
+                                        <button className="group px-8 py-4 bg-orange-300 text-gray-900 rounded-full font-black text-[16px] tracking-[0.2em] hover:bg-orange-400 transition-all duration-300 shadow-xl flex items-center gap-3">
+                                            Shop Collection <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                                         </button>
-                                        <button className="px-10 py-5 bg-transparent border border-white/30 text-white rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all backdrop-blur-sm">
+                                        <button className="px-8 py-4 bg-transparent border border-orange-300/50 text-orange-300 rounded-full font-black text-[16px] tracking-[0.2em] hover:bg-orange-300/10 transition-all backdrop-blur-sm">
                                             View Lookbook
                                         </button>
                                     </motion.div>
@@ -126,19 +126,19 @@ const Home = () => {
                         </motion.div>
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-white opacity-20 uppercase tracking-[0.5em] font-black text-xs">
-                            {loading ? "Initializing Experience..." : "Ready to Redefine"}
+                            {loading ? "Discovering Luxury..." : "Experience the Orange"}
                         </div>
                     )}
                 </AnimatePresence>
 
                 {/* Progress Indicators */}
                 {heroSections && heroSections.length > 1 && (
-                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
                         {heroSections.map((_, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setCurrentIndex(idx)}
-                                className={`h-1 transition-all duration-500 rounded-full ${idx === currentIndex ? 'w-12 bg-white' : 'w-4 bg-white/30 hover:bg-white/50'}`}
+                                className={`h-1.5 transition-all duration-500 rounded-full ${idx === currentIndex ? 'w-10 bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'w-4 bg-white/20 hover:bg-white/40'}`}
                             />
                         ))}
                     </div>

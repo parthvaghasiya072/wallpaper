@@ -24,5 +24,4 @@ router.put("/updateUser/:id", upload.single("photo"), updateUser);
 router.get("/getHeroSections", getHeroSections);
 
 
-
 module.exports = router;
