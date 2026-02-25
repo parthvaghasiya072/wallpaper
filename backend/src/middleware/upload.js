@@ -11,24 +11,35 @@ const storage = multer.diskStorage({
 
 // Check file type
 function checkFileType(file, cb) {
-    // Allowed extensions
-    const filetypes = /jpeg|jpg|png|webp/;
-    // Check extension
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    // Check mime type
-    const mimetype = filetypes.test(file.mimetype);
+    console.log('Multer checkFileType - File info:', {
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        extension: path.extname(file.originalname).toLowerCase()
+    });
 
-    if (mimetype && extname) {
+    // Allowed extensions
+    const filetypes = /jpeg|jpg|png|webp|avif|heic|heif/;
+
+    // Check extension
+    const extName = path.extname(file.originalname).toLowerCase();
+    const isExtensionAllowed = filetypes.test(extName);
+
+    // Check mime type (Allow if it's an image, generic stream, or if the extension is definitely known)
+    const isMimeAllowed = (file.mimetype && file.mimetype.startsWith('image/')) ||
+        file.mimetype === 'application/octet-stream';
+
+    if (isMimeAllowed || isExtensionAllowed) {
         return cb(null, true);
     } else {
-        cb('Error: Images Only!');
+        console.error(`Multer rejected file: ${file.originalname} (Mime: ${file.mimetype})`);
+        cb(new Error(`File type not supported. Please upload an image (JPG, PNG, WebP, AVIF). Current mime: ${file.mimetype}`));
     }
 }
 
 // Initial upload
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5000000 }, // 5MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }

@@ -1,48 +1,38 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiImage, FiType, FiAlignLeft, FiCheck } from 'react-icons/fi';
-import { useDispatch } from 'react-redux';
-import { createHeroSection, updateHeroSection } from '../../redux/slices/heroSlice';
 
-// ─── Modal Component ──────────────────────────────────────────────────────────
-const AddHeroSectionModal = ({ isOpen, onClose, isDark, editingItem }) => {
+const AddHeroSectionModal = ({ isOpen, onClose, isDark, editingItem, onSubmit }) => {
     const fileInputRef = useRef(null);
-    const dispatch = useDispatch();
+
+    const getImageUrl = (image) => {
+        if (!image) return null;
+        if (typeof image === 'string') {
+            return image.startsWith('http') ? image : `http://localhost:5000${image}`;
+        }
+        return URL.createObjectURL(image);
+    };
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     const HeroSchema = Yup.object().shape({
         title: Yup.string().required('Title is required'),
         description: Yup.string().required('Description is required'),
-        image: Yup.mixed().test("required", "Image is required", (value) => {
-            // If editing and no new file, allow (since old image exists). 
-            // If adding, file is required.
-            if (editingItem) return true;
-            return value instanceof File;
-        })
+        image: Yup.mixed()
+            .test("required", "Image is required", (value) => {
+                // If value is a string, it means it's an existing image (Edit mode)
+                // If it's a File, it's a new upload
+                return !!value;
+            })
+            .test('file-size', 'Image exceeds the 10MB limit', (value) => {
+                if (value instanceof File) {
+                    return value.size <= MAX_FILE_SIZE;
+                }
+                return true;
+            })
     });
-
-    const handleSubmit = (values, { setSubmitting, resetForm }) => {
-        const formData = new FormData();
-        formData.append('title', values.title);
-        formData.append('description', values.description);
-
-        if (values.image instanceof File) {
-            formData.append('image', values.image);
-        }
-
-        const action = editingItem
-            ? updateHeroSection({ id: editingItem._id, data: formData })
-            : createHeroSection(formData);
-
-        dispatch(action).then((res) => {
-            if (res.meta.requestStatus === 'fulfilled') {
-                resetForm();
-                onClose();
-            }
-            setSubmitting(false);
-        });
-    };
 
     return (
         <AnimatePresence>
@@ -72,22 +62,24 @@ const AddHeroSectionModal = ({ isOpen, onClose, isDark, editingItem }) => {
                             </button>
                         </div>
 
-                        {/* Body */}
                         <Formik
                             initialValues={{
                                 title: editingItem?.title || '',
                                 description: editingItem?.description || '',
-                                image: null
+                                image: editingItem?.image || null
                             }}
                             validationSchema={HeroSchema}
-                            onSubmit={handleSubmit}
+                            onSubmit={onSubmit}
                             enableReinitialize={true}
                         >
                             {({ isSubmitting, setFieldValue, values, errors, touched }) => (
                                 <Form className="p-8 space-y-6">
                                     {/* Image Upload */}
                                     <div className="space-y-2">
-                                        <label className={`text-[10px] font-black uppercase tracking-widest px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Banner Visual</label>
+                                        <div className="flex justify-between items-center px-2">
+                                            <label className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Banner Visual</label>
+                                            <span className="text-[8px] font-bold text-indigo-500/60 uppercase tracking-widest">Max 10MB limit</span>
+                                        </div>
                                         <div
                                             onClick={() => fileInputRef.current?.click()}
                                             className={`relative group h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${isDark
@@ -106,20 +98,9 @@ const AddHeroSectionModal = ({ isOpen, onClose, isDark, editingItem }) => {
                                             {values.image ? (
                                                 <div className="relative w-full h-full">
                                                     <img
-                                                        src={URL.createObjectURL(values.image)}
+                                                        src={getImageUrl(values.image)}
                                                         className="w-full h-full object-cover opacity-80"
                                                         alt="Preview"
-                                                    />
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <span className="text-white text-xs font-bold uppercase tracking-widest">Change Image</span>
-                                                    </div>
-                                                </div>
-                                            ) : editingItem?.image ? (
-                                                <div className="relative w-full h-full">
-                                                    <img
-                                                        src={editingItem.image?.startsWith('http') ? editingItem.image : `http://localhost:5000${editingItem.image}`}
-                                                        className="w-full h-full object-cover opacity-80"
-                                                        alt="Existing"
                                                     />
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <span className="text-white text-xs font-bold uppercase tracking-widest">Change Image</span>

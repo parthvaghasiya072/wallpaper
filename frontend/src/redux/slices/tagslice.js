@@ -81,7 +81,6 @@ const tagSlice = createSlice({
                 state.error = action.payload;
                 toast.error(action.payload || "Failed to create tag");
             })
-
             .addCase(getAllTags.pending, (state) => {
                 state.loading = true;
                 state.error = null;

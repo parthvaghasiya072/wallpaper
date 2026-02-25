@@ -5,6 +5,7 @@ import categoryReducer from './slices/categorySlice';
 import userReducer from './slices/userSlice';
 import heroReducer from './slices/heroSlice';
 import tagReducer from './slices/tagslice';
+import bannerReducer from './slices/bannerSlice';
 
 export const store = configureStore({
     reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
         user: userReducer,
         hero: heroReducer,
         tag: tagReducer,
+        banners: bannerReducer,
     },
 });
 

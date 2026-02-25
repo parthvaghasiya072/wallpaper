@@ -22,9 +22,7 @@ export const createHeroSection = createAsyncThunk(
     "hero/createHeroSection",
     async (data, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${API_URL}/admin/createHeroSection`, data, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
+            const response = await axios.post(`${API_URL}/admin/createHeroSection`, data);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Something went wrong");
@@ -37,9 +35,7 @@ export const updateHeroSection = createAsyncThunk(
     "hero/updateHeroSection",
     async ({ id, data }, { rejectWithValue }) => {
         try {
-            const response = await axios.put(`${API_URL}/admin/updateHeroSection/${id}`, data, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
+            const response = await axios.put(`${API_URL}/admin/updateHeroSection/${id}`, data);
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Something went wrong");

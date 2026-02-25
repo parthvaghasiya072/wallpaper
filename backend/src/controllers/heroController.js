@@ -11,7 +11,11 @@ const createHeroSection = async (req, res) => {
         }
 
         if (!req.file) {
-            return res.status(400).json({ success: false, message: "Image is required" });
+            console.error("No file received or file rejected by Multer");
+            return res.status(400).json({
+                success: false,
+                message: "Image is required or file type/size not supported"
+            });
         }
 
         const imagePath = `/uploads/${req.file.filename}`;
@@ -22,11 +26,12 @@ const createHeroSection = async (req, res) => {
             image: imagePath
         });
 
+        // Fetch refreshed list to keep UI in sync
         const allSections = await HeroSection.find().sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
-            message: "Hero section added successfully.",
+            message: "Hero slide published successfully.",
             data: allSections
         });
 
@@ -34,7 +39,7 @@ const createHeroSection = async (req, res) => {
         console.error("Error creating hero section:", error);
         res.status(500).json({
             success: false,
-            message: error.message
+            message: error.message || "An unexpected error occurred while saving the slide"
         });
     }
 };
@@ -61,6 +66,18 @@ const updateHeroSection = async (req, res) => {
         const { id } = req.params;
         const { title, description } = req.body;
 
+        console.log('UpdateHeroSection Request:', {
+            id,
+            body: req.body,
+            file: req.file ? req.file.originalname : 'No new file'
+        });
+
+        // Verify item exists
+        const existingItem = await HeroSection.findById(id);
+        if (!existingItem) {
+            return res.status(404).json({ success: false, message: "Hero section item not found" });
+        }
+
         const updateData = {};
         if (title) updateData.title = title;
         if (description) updateData.description = description;
@@ -71,9 +88,13 @@ const updateHeroSection = async (req, res) => {
             updateData.image = imagePath;
         }
 
-        await HeroSection.findByIdAndUpdate(id, updateData, { new: true });
+        const updated = await HeroSection.findByIdAndUpdate(id, updateData, { new: true });
 
-        // Return updated list
+        if (!updated) {
+            return res.status(500).json({ success: false, message: "Failed to update item" });
+        }
+
+        // Return updated list for UI sync
         const allSections = await HeroSection.find().sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -84,7 +105,11 @@ const updateHeroSection = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating hero section:", error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({
+            success: false,
+            message: error.name === 'CastError' ? "Invalid ID format" : `Server Error: ${error.message}`,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 

@@ -10,18 +10,17 @@ const {
 const {
     createCategory,
     updateCategory,
-    deleteCategory,
-    getAllCategory
+    deleteCategory
 } = require("../controllers/categoryController");
 
 const {
-    getAllUsers,
     deleteUser
 } = require("../controllers/userController");
 
 const upload = require("../middleware/upload");
-const { createHeroSection, getHeroSections, updateHeroSection, deleteHeroSection } = require("../controllers/heroController");
+const { createHeroSection, updateHeroSection, deleteHeroSection } = require("../controllers/heroController");
 const { createTag, getTagById, updateTagById, deleteTagById } = require("../controllers/tagController");
+const { createBanner, deleteBannerById, updateBannerById, singleBannerById } = require("../controllers/bannerController");
 
 // --- Product Routes ---
 router.post("/createProduct", upload.array("images", 10), createProduct);
@@ -36,7 +35,6 @@ router.delete("/deleteCategory/:id", deleteCategory);
 // --- User Routes ---
 router.delete("/deleteUserById/:id", deleteUser);
 
-
 // Home
 
 // HeroSections
@@ -49,5 +47,11 @@ router.post("/createTag", createTag);
 router.get("/getTagById/:id", getTagById);
 router.put("/updateTagById/:id", updateTagById);
 router.delete("/deleteTagById/:id", deleteTagById);
+
+//Banner
+router.post("/createBanner", upload.single("image"), createBanner);
+router.get("/getSingleBanner/:id", singleBannerById);
+router.put("/updateBannerById/:id", upload.single("image"), updateBannerById);
+router.delete("/deleteBannerById/:id", deleteBannerById)
 
 module.exports = router;

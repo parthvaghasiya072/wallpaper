@@ -27,6 +27,15 @@ app.get('/', (req, res) => {
     res.send('Wallpaper App API is running...');
 });
 
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error'
+    });
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

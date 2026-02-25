@@ -7,6 +7,7 @@ const { getAllUsers, getUserById, updateUser } = require("../controllers/userCon
 const upload = require("../middleware/upload");
 const { getHeroSections } = require("../controllers/heroController");
 const { getAllTags } = require("../controllers/tagController");
+const { getAllBanners } = require("../controllers/bannerController");
 
 // product
 router.get("/getAllProducts", getAllProducts);
@@ -26,5 +27,8 @@ router.get("/getHeroSections", getHeroSections);
 
 //Tags
 router.get("/getAllTags", getAllTags);
+
+//Banner
+router.get("/getAllBanners", getAllBanners);
 
 module.exports = router;

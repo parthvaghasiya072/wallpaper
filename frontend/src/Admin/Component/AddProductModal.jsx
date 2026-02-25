@@ -7,6 +7,8 @@ import {
     FiTrash2, FiDollarSign, FiCheck, FiPlus
 } from 'react-icons/fi';
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 const validationSchema = Yup.object().shape({
     titleName: Yup.string()
         .required('Title is required')
@@ -20,8 +22,18 @@ const validationSchema = Yup.object().shape({
         .required('Description is required')
         .min(10, 'Description too short'),
     images: Yup.array()
-        .min(1, 'At least one image is required')
-        .of(Yup.mixed().required('Image is required')),
+        .test('at-least-one', 'At least one artwork image is required', (value) => {
+            return value && value.some(img => img !== null);
+        })
+        .test('file-size', 'Image exceeds the 10MB limit', (value) => {
+            if (!value) return true;
+            return value.every(img => {
+                if (img instanceof File) {
+                    return img.size <= MAX_FILE_SIZE;
+                }
+                return true;
+            });
+        }),
     paperOptions: Yup.array().of(
         Yup.object().shape({
             paperType: Yup.string().required('Type is required'),
@@ -158,7 +170,10 @@ const AddProductModal = ({
                                                         {({ push, remove }) => (
                                                             <>
                                                                 <div className="flex items-center justify-between">
-                                                                    <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Visual Assets (Gallery)</label>
+                                                                    <div className="flex flex-col">
+                                                                        <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Visual Assets (Gallery)</label>
+                                                                        <span className="text-[8px] font-bold text-indigo-500/60 uppercase tracking-widest">Max 10MB per artwork</span>
+                                                                    </div>
                                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{values.images.filter(img => img).length} Assets Selected</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -196,8 +211,8 @@ const AddProductModal = ({
                                                                         </div>
                                                                     ))}
 
-                                                                    {/* Automatically add a new slot button if the current items are filled */}
-                                                                    {values.images.length > 0 && values.images[values.images.length - 1] !== null && (
+                                                                    {/* Automatically add a new slot button if the current items are filled or if array is empty */}
+                                                                    {(values.images.length === 0 || (values.images.length > 0 && values.images[values.images.length - 1] !== null)) && (
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => push(null)}

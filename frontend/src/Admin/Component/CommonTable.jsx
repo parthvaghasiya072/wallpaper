@@ -29,10 +29,13 @@ const CommonTable = ({
     serverCurrentPage,
     onPageChange,
     onRowsPerPageChange,
-    totalRecordsCount
+    totalRecordsCount,
+    onSearch,
+    searchTerm: externalSearchTerm
 }) => {
     const isServerSide = serverTotalPages !== undefined;
-    const [searchTerm, setSearchTerm] = useState('');
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
+    const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : localSearchTerm;
     const [localCurrentPage, setLocalCurrentPage] = useState(1);
     // ... (rest of state items are fine to keep, maybe reset localCurrentPage if showPagination changes but unlikely)
     const [rowsPerPage, setRowsPerPage] = useState(itemsPerPage);
@@ -46,6 +49,7 @@ const CommonTable = ({
     // ... (Search, Sorting, Pagination Logic - keep as is) 
 
     const filteredData = useMemo(() => {
+        if (isServerSide) return data;
         if (!searchTerm) return data;
         return data.filter(item =>
             columns.some(col => {
@@ -57,7 +61,7 @@ const CommonTable = ({
                 return itemValue && itemValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
             })
         );
-    }, [data, searchTerm, columns]);
+    }, [data, searchTerm, columns, isServerSide]);
 
     const sortedData = useMemo(() => {
         if (!sortConfig.key) return filteredData;
@@ -128,7 +132,14 @@ const CommonTable = ({
                             type="text"
                             placeholder={searchPlaceholder}
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (onSearch) {
+                                    onSearch(val);
+                                } else {
+                                    setLocalSearchTerm(val);
+                                }
+                            }}
                             className={`w-full pl-16 pr-8 py-4 rounded-lg outline-none transition-all text-sm font-bold tracking-tight border-2 ${isDark
                                 ? 'bg-slate-950/50 border-transparent focus:border-indigo-500/50 text-white placeholder:text-slate-700'
                                 : 'bg-slate-50/50 border-transparent focus:border-indigo-600/20 text-slate-900 placeholder:text-slate-400'
@@ -177,7 +188,7 @@ const CommonTable = ({
                                         </th>
                                     );
                                 })}
-                                {hasActions && <th className="px-8 py-6 text-[11px] font-black tracking-[0.3em] uppercase opacity-50">Actions</th>}
+                                {hasActions && <th className="px-8 py-6 text-[16px] font-black tracking-[0.2em] uppercase opacity-50 whitespace-nowrap">Actions</th>}
                             </tr>
                         </thead>
                         <tbody className={`divide-y ${isDark ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
@@ -211,7 +222,7 @@ const CommonTable = ({
                                                             whileHover={{ scale: 1.2, rotate: 5 }}
                                                             whileTap={{ scale: 0.9 }}
                                                             onClick={() => onView(item)}
-                                                            className={`transition-all ${isDark ? 'text-indigo-400 hover:text-white' : 'text-indigo-600 hover:text-white'}`}
+                                                            className={`p-2 rounded-xl transition-all ${isDark ? 'text-indigo-400 hover:bg-indigo-500/20' : 'text-indigo-600 hover:bg-indigo-50'}`}
                                                         >
                                                             <FiEye size={18} />
                                                         </motion.button>
@@ -221,7 +232,7 @@ const CommonTable = ({
                                                             whileHover={{ scale: 1.2, rotate: -5 }}
                                                             whileTap={{ scale: 0.9 }}
                                                             onClick={() => onEdit(item)}
-                                                            className={`transition-all ${isDark ? 'text-emerald-400 hover:text-white' : 'text-emerald-600 hover:text-white'}`}
+                                                            className={`p-2 rounded-xl transition-all ${isDark ? 'text-emerald-400 hover:bg-emerald-500/20' : 'text-emerald-600 hover:bg-emerald-50'}`}
                                                         >
                                                             <FiEdit3 size={18} />
                                                         </motion.button>
@@ -231,7 +242,7 @@ const CommonTable = ({
                                                             whileHover={{ scale: 1.2 }}
                                                             whileTap={{ scale: 0.9 }}
                                                             onClick={() => onDelete(item)}
-                                                            className={`transition-all ${isDark ? 'text-rose-400 hover:text-white' : 'text-rose-600 hover:text-white'}`}
+                                                            className={`p-2 rounded-xl transition-all ${isDark ? 'text-rose-400 hover:bg-rose-500/20' : 'text-rose-600 hover:bg-rose-50'}`}
                                                         >
                                                             <FiTrash2 size={18} />
                                                         </motion.button>

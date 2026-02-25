@@ -31,7 +31,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark }) => {
             path: '/admin/home',
             submenu: [
                 { label: 'Hero Section', path: '/admin/home/hero' },
-                { label: 'Tags', path: '/admin/home/tags' }
+                { label: 'Tags', path: '/admin/home/tags' },
+                { label: 'Banner', path: '/admin/home/banner' }
             ]
         },
     ];

@@ -7,7 +7,7 @@ import CommonTable from '../Component/CommonTable';
 import AddHeroSectionModal from '../Component/AddHeroSectionModal';
 import CommonDeleteModal from '../Component/CommonDeleteModal';
 import CommonViewModal from '../Component/CommonViewModal';
-import { getHeroSections, deleteHeroSection } from '../../redux/slices/heroSlice';
+import { getHeroSections, deleteHeroSection, createHeroSection, updateHeroSection } from '../../redux/slices/heroSlice';
 
 const HeroSection = () => {
     const { isDark } = useOutletContext();
@@ -25,7 +25,7 @@ const HeroSection = () => {
         dispatch(getHeroSections());
     }, [dispatch]);
 
-    // ─── Handlers ─────────────────────────────────────────────────────────────────
+    // ─── Handlers ───
     const handleOpenAdd = () => {
         setEditingItem(null);
         setIsAddModalOpen(true);
@@ -54,6 +54,37 @@ const HeroSection = () => {
         }
     };
 
+    const handleSubmit = (values, { setSubmitting, resetForm }) => {
+        const formData = new FormData();
+        formData.append('title', values.title);
+        formData.append('description', values.description);
+
+        if (values.image instanceof File) {
+            formData.append('image', values.image);
+        }
+
+        const action = editingItem
+            ? updateHeroSection({ id: editingItem._id, data: formData })
+            : createHeroSection(formData);
+
+        dispatch(action).then((res) => {
+            if (res.meta.requestStatus === 'fulfilled') {
+                resetForm();
+                setIsAddModalOpen(false);
+                setEditingItem(null);
+            }
+            setSubmitting(false);
+        });
+    };
+
+    const getImageUrl = (image) => {
+        if (!image) return null;
+        if (typeof image === 'string') {
+            return image.startsWith('http') ? image : `http://localhost:5000${image}`;
+        }
+        return URL.createObjectURL(image);
+    };
+
     const columns = [
         {
             header: 'Visual',
@@ -61,7 +92,7 @@ const HeroSection = () => {
             render: (item) => (
                 <div className={`p-2 rounded-lg ${isDark ? 'bg-[#132846]' : 'bg-slate-100'} w-24 h-16 flex-shrink-0 overflow-hidden`}>
                     <img
-                        src={item.image?.startsWith('http') ? item.image : `http://localhost:5000${item.image}`}
+                        src={getImageUrl(item.image)}
                         alt={item.title}
                         className="w-full h-full object-cover rounded-md transition-transform duration-500 hover:scale-125"
                     />
@@ -134,6 +165,7 @@ const HeroSection = () => {
                 onClose={() => setIsAddModalOpen(false)}
                 isDark={isDark}
                 editingItem={editingItem}
+                onSubmit={handleSubmit}
             />
 
             <CommonDeleteModal
