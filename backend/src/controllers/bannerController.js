@@ -21,6 +21,10 @@ const createBanner = async (req, res) => {
     }
 }
 
+
+
+
+
 const getAllBanners = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
