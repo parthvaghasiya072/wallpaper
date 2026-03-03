@@ -57,6 +57,7 @@ const getAllProducts = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+        res.setHeader('Cache-Control', 'no-store');
         res.status(200).json({
             products,
             total,

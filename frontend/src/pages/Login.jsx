@@ -95,7 +95,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#060412]">
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#060412] font-sans">
             <Toaster position="top-center" />
 
             <AnimatedBackground />
@@ -264,30 +264,6 @@ const Login = () => {
                 <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-600/10 blur-[100px] -z-10" />
             </motion.div>
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-                
-                * { font-family: 'Plus Jakarta Sans', sans-serif; }
-                
-                input:-webkit-autofill,
-                input:-webkit-autofill:hover, 
-                input:-webkit-autofill:focus, 
-                input:-webkit-autofill:active {
-                    -webkit-text-fill-color: white !important;
-                    -webkit-box-shadow: 0 0 0px 1000px #0c0a1a inset !important;
-                    transition: background-color 5000s ease-in-out 0s;
-                    caret-color: white;
-                }
-
-                input::placeholder { color: rgba(167, 139, 250, 0.15); }
-
-                ::-webkit-scrollbar { display: none; }
-                
-                ::selection {
-                    background: rgba(139, 92, 246, 0.4);
-                    color: white;
-                }
-            `}</style>
         </div>
     );
 };

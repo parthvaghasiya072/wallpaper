@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
+        console.log("Connecting to:", process.env.MONGO_URI ? process.env.MONGO_URI.replace(/:([^:@]+)@/, ':****@') : "undefined");
         const conn = await mongoose.connect(process.env.MONGO_URI);
-        console.log("MongoDB Connected.");
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+        console.log(`Database name: ${conn.connection.name}`);
 
         // Automatically drop the stale productId index if it exists
         // This solves the E11000 duplicate key error after the field was removed
@@ -15,7 +17,7 @@ const connectDB = async () => {
         }
 
     } catch (error) {
-        console.error(`Error: ${error.message}`);
+        console.error(`MongoDB Connection Error: ${error.message}`);
         process.exit(1);
     }
 };

@@ -9,8 +9,16 @@ export const loginUser = createAsyncThunk(
     async (userData, { rejectWithValue }) => {
         try {
             const response = await axios.post(`${API_URL}/user/login`, userData);
-            // Storing user data in localStorage
+            // Extracts ID whether it's flat or nested in a 'data' property
+            const user = response.data.data || response.data;
+            const userId = user._id || user.id;
+
+            // Storing both the full object and specifically the ID for easy access
             localStorage.setItem('user', JSON.stringify(response.data));
+            if (userId) {
+                localStorage.setItem('userId', userId);
+            }
+
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Something went wrong');
@@ -32,6 +40,7 @@ export const registerUser = createAsyncThunk(
 
 const initialState = {
     user: JSON.parse(localStorage.getItem('user')) || null,
+    userId: localStorage.getItem('userId') || null,
     isLoading: false,
     error: null,
 };
@@ -42,7 +51,9 @@ const authSlice = createSlice({
     reducers: {
         logout: (state) => {
             state.user = null;
+            state.userId = null;
             localStorage.removeItem('user');
+            localStorage.removeItem('userId');
             toast.success('Logged out successfully');
         },
         clearError: (state) => {
@@ -57,9 +68,11 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
+                const user = action.payload.data || action.payload;
                 state.isLoading = false;
                 state.user = action.payload;
-                toast.success(`Welcome back, ${action.payload.firstName}!`);
+                state.userId = user._id || user.id;
+                toast.success(`Welcome back, ${user.firstName}!`);
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.isLoading = false;
@@ -79,6 +92,11 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload;
                 toast.error(action.payload);
+            })
+            // Update auth state when user profile is updated in userSlice
+            .addCase('user/updateUser/fulfilled', (state, action) => {
+                state.user = action.payload.data;
+                localStorage.setItem('user', JSON.stringify(action.payload.data));
             });
     },
 });

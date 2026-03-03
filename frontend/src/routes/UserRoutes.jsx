@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from '../pages/Home';
+import Profile from '../pages/Profile';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const UserRoutes = () => {
@@ -12,6 +13,7 @@ const UserRoutes = () => {
             {/* Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
                 {/* Add protected user routes here (e.g. Profile, Orders) */}
+                <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* Fallback for undefined user paths */}

@@ -98,33 +98,59 @@ const Header = () => {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
+                                        className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden ring-1 ring-black/5"
                                     >
-                                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                                            <p className="text-sm font-semibold text-gray-900 truncate">
+                                        <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-amber-50/50 to-white/50">
+                                            <p className="text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">
+                                                Welcome
+                                            </p>
+                                            <p className="text-sm font-bold text-primary truncate">
                                                 {user.firstName} {user.lastName}
                                             </p>
-                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                            <p className="text-[11px] text-muted truncate">{user.email}</p>
                                         </div>
 
-                                        <div className="py-1">
-                                            <Link to="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                                <FiUser className="text-gray-400" /> My Profile
+                                        <div className="py-2">
+                                            <Link
+                                                to="/profile"
+                                                onClick={() => setIsProfileOpen(false)}
+                                                className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-accent transition-all duration-300"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-accent">
+                                                    <FiUser size={16} />
+                                                </div>
+                                                <span className="font-medium">My Profile</span>
                                             </Link>
-                                            <Link to="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                                <FiPackage className="text-gray-400" /> Orders
+
+                                            <Link
+                                                to="/orders"
+                                                onClick={() => setIsProfileOpen(false)}
+                                                className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-accent transition-all duration-300"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                                                    <FiPackage size={16} />
+                                                </div>
+                                                <span className="font-medium">Orders</span>
                                             </Link>
-                                            <Link to="/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                                <FiSettings className="text-gray-400" /> Settings
+
+                                            <Link
+                                                to="/settings"
+                                                onClick={() => setIsProfileOpen(false)}
+                                                className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-accent transition-all duration-300"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+                                                    <FiSettings size={16} />
+                                                </div>
+                                                <span className="font-medium">Settings</span>
                                             </Link>
                                         </div>
 
-                                        <div className="border-t border-gray-100 mt-1 py-1">
+                                        <div className="p-3 border-t border-gray-100">
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all duration-300 shadow-lg shadow-red-200"
                                             >
-                                                <FiLogOut /> Sign Out
+                                                <FiLogOut size={16} /> Sign Out
                                             </button>
                                         </div>
                                     </motion.div>

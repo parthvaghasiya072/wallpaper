@@ -7,7 +7,7 @@ export default {
     extend: {
       fontFamily: {
         serif: ['"Playfair Display"', 'serif'],
-        sans: ['Inter', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
       },
       colors: {
         primary: '#2A2A2A', // Charcoal for text/accents
