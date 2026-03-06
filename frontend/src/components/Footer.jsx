@@ -4,9 +4,9 @@ import { FiInstagram, FiFacebook, FiTwitter, FiLinkedin, FiArrowRight } from 're
 
 const Footer = () => {
     return (
-        <footer className="bg-gray-50 pt-20 pb-10 border-t border-gray-200">
+        <footer className="bg-gray-50 pt-12 pb-12 border-t border-gray-200">
             <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-8">
                     {/* Brand Column */}
                     <div className="space-y-6">
                         <Link to="/" className="text-2xl font-serif font-bold tracking-tighter text-gray-900 block">

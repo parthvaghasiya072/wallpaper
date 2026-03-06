@@ -41,6 +41,11 @@ const CommonTable = ({
     const [rowsPerPage, setRowsPerPage] = useState(itemsPerPage);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
+    // Sync local state with prop
+    useEffect(() => {
+        setRowsPerPage(itemsPerPage);
+    }, [itemsPerPage]);
+
     const activePage = isServerSide ? serverCurrentPage : localCurrentPage;
 
     // Check if any actions are enabled
@@ -105,8 +110,9 @@ const CommonTable = ({
 
     const handleRowsPerPageChange = (v) => {
         setRowsPerPage(v);
-        onRowsPerPageChange?.(v);
-        if (isServerSide) {
+        if (onRowsPerPageChange) {
+            onRowsPerPageChange(v);
+        } else if (isServerSide) {
             onPageChange?.(1);
         } else {
             setLocalCurrentPage(1);

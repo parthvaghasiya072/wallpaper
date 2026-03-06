@@ -62,6 +62,32 @@ const Shop = () => {
         );
     };
 
+    const paginationRange = useMemo(() => {
+        if (totalPages <= 7) {
+            return [...Array(totalPages).keys()].map(i => i + 1);
+        }
+
+        const range = [];
+        if (currentPage <= 4) {
+            for (let i = 1; i <= 5; i++) range.push(i);
+            range.push('...');
+            range.push(totalPages);
+        } else if (currentPage >= totalPages - 3) {
+            range.push(1);
+            range.push('...');
+            for (let i = totalPages - 4; i <= totalPages; i++) range.push(i);
+        } else {
+            range.push(1);
+            range.push('...');
+            range.push(currentPage - 1);
+            range.push(currentPage);
+            range.push(currentPage + 1);
+            range.push('...');
+            range.push(totalPages);
+        }
+        return range;
+    }, [totalPages, currentPage]);
+
     return (
         <div className="bg-surface min-h-screen text-primary font-sans selection:bg-accent selection:text-white">
             <Header />
@@ -85,7 +111,6 @@ const Shop = () => {
                             </div>
                         </div>
 
-                        {/* Filter Sections (Accordions) */}
                         {[
                             { id: 'categories', label: 'Collections', count: categories.length },
                             { id: 'price', label: 'Price Range' },
@@ -232,12 +257,16 @@ const Shop = () => {
                                                 className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border-1 border-orange-500 shadow-[0_12px_20px_-10px_rgba(249,115,22,0.5)] hover:shadow-[-15px_15px_30px_-10px_rgba(249,115,22,0.7)] hover:border-orange-400"
                                             >
                                                 {/* Image Link */}
-                                                <Link to={`/product-details/${p._id}`} className="block relative h-48 overflow-hidden bg-gray-50">
-                                                    <img
-                                                        src={p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : ''}
-                                                        alt={p.titleName}
-                                                        className="w-full h-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-out"
-                                                    />
+                                                <div className="relative h-48 overflow-hidden bg-gray-50">
+                                                    <Link to={`/product-details/${p._id}`} className="block w-full h-full">
+                                                        <img
+                                                            src={p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : ''}
+                                                            alt={p.titleName}
+                                                            className="w-full h-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-out"
+                                                        />
+                                                        {/* Subtle Overlay on Hover */}
+                                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                                    </Link>
 
                                                     {/* Category Badge - Top Left */}
                                                     <div className="absolute top-4 left-4 z-10">
@@ -246,16 +275,14 @@ const Shop = () => {
                                                         </span>
                                                     </div>
 
-                                                    {/* Subtle Overlay on Hover */}
-                                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
                                                     {/* Action Buttons - Heart and Eye Icons sliding in */}
-                                                    <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-10">
+                                                    <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-20">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.preventDefault();
+                                                                // Add wishlist logic here
                                                             }}
-                                                            className="p-3 bg-white rounded-full text-gray-400 hover:text-red-500 hover:scale-110 transition-all shadow-xl pointer-events-auto"
+                                                            className="p-3 bg-white rounded-full text-gray-400 hover:text-red-500 hover:scale-110 transition-all shadow-xl"
                                                         >
                                                             <FiHeart size={20} />
                                                         </button>
@@ -266,7 +293,7 @@ const Shop = () => {
                                                             <FiEye size={20} />
                                                         </Link>
                                                     </div>
-                                                </Link>
+                                                </div>
 
                                                 {/* Content */}
                                                 <div className="p-3">
@@ -293,25 +320,29 @@ const Shop = () => {
                                             disabled={currentPage === 1}
                                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                             className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentPage === 1
-                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    : 'bg-white text-orange-600 hover:bg-orange-500 hover:text-white shadow-sm border border-orange-50'
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                : 'bg-white text-orange-600 hover:bg-orange-500 hover:text-white shadow-sm border border-orange-50'
                                                 }`}
                                         >
                                             Back
                                         </button>
 
                                         <div className="flex items-center gap-2">
-                                            {[...Array(totalPages)].map((_, i) => (
-                                                <button
-                                                    key={i + 1}
-                                                    onClick={() => setCurrentPage(i + 1)}
-                                                    className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${currentPage === i + 1
+                                            {paginationRange.map((page, i) => (
+                                                page === '...' ? (
+                                                    <span key={`dots-${i}`} className="px-2 text-gray-400 font-black">...</span>
+                                                ) : (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => setCurrentPage(page)}
+                                                        className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${currentPage === page
                                                             ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/30'
                                                             : 'bg-white text-gray-500 hover:bg-orange-50 border border-orange-50'
-                                                        }`}
-                                                >
-                                                    {i + 1}
-                                                </button>
+                                                            }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                )
                                             ))}
                                         </div>
 
@@ -319,8 +350,8 @@ const Shop = () => {
                                             disabled={currentPage === totalPages}
                                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                             className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentPage === totalPages
-                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    : 'bg-white text-orange-600 hover:bg-orange-500 hover:text-white shadow-sm border border-orange-50'
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                : 'bg-white text-orange-600 hover:bg-orange-500 hover:text-white shadow-sm border border-orange-50'
                                                 }`}
                                         >
                                             Next
