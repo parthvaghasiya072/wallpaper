@@ -48,12 +48,40 @@ const createProduct = async (req, res) => {
 const getAllProducts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
+        const { category, search, minPrice, maxPrice, sortBy } = req.query;
 
-        const total = await Product.countDocuments();
-        const products = await Product.find()
-            .sort({ createdAt: -1 }) // Show newest first
+        // Build Query
+        let query = {};
+        if (category) {
+            // Support comma separated categories
+            const categoryArray = category.split(',').map(c => c.trim());
+            query.category = { $in: categoryArray };
+        }
+        if (search) {
+            query.$or = [
+                { titleName: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Price range based on initial paper option
+        if (minPrice || maxPrice) {
+            query['paperOptions.0.pricePerSqFt'] = {};
+            if (minPrice) query['paperOptions.0.pricePerSqFt'].$gte = Number(minPrice);
+            if (maxPrice) query['paperOptions.0.pricePerSqFt'].$lte = Number(maxPrice);
+        }
+
+        // Build Sort order
+        let sort = { createdAt: -1 };
+        if (sortBy === 'price-low') sort = { 'paperOptions.pricePerSqFt': 1 };
+        if (sortBy === 'price-high') sort = { 'paperOptions.pricePerSqFt': -1 };
+        if (sortBy === 'name') sort = { titleName: 1 };
+
+        const total = await Product.countDocuments(query);
+        const products = await Product.find(query)
+            .sort(sort)
             .skip(skip)
             .limit(limit);
 

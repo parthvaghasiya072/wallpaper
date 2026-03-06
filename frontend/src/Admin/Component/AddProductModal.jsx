@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAllCategories } from '../../redux/slices/categorySlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, FieldArray, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import {
     FiX, FiEdit3, FiBox, FiImage,
-    FiTrash2, FiDollarSign, FiCheck, FiPlus
+    FiTrash2, FiDollarSign, FiCheck, FiPlus, FiChevronDown, FiLayers
 } from 'react-icons/fi';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -55,6 +57,16 @@ const AddProductModal = ({
     onSubmitSuccess,
     editData = null
 }) => {
+    const dispatch = useDispatch();
+    const { categories = [] } = useSelector((state) => state.category || {});
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            dispatch(getAllCategories({ limit: 100 }));
+        }
+    }, [dispatch, isOpen]);
+
     const isEdit = !!editData;
 
     const initialValues = editData ? {
@@ -130,17 +142,60 @@ const AddProductModal = ({
                                                     <ErrorMessage name="titleName" component={ErrorText} />
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-6">
-                                                    <div className="space-y-3">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="space-y-3 relative">
                                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Art Category</label>
-                                                        <div className={`px-6 py-4 rounded-2xl border ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                                                            <Field as="select" name="category" className="bg-transparent border-none outline-none text-sm w-full font-bold appearance-none">
-                                                                <option value="" disabled>Select</option>
-                                                                <option value="Abstract">Abstract</option>
-                                                                <option value="Nature">Nature</option>
-                                                                <option value="Futuristic">Futuristic</option>
-                                                                <option value="Minimalist">Minimalist</option>
-                                                            </Field>
+                                                        <div className="relative">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all ${isDark
+                                                                    ? 'bg-slate-900/50 border-slate-700'
+                                                                    : 'bg-slate-50 border-slate-200'
+                                                                    } ${isDropdownOpen ? '' : ''}`}
+                                                            >
+                                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                                    <FiLayers className="text-slate-400"/>
+                                                                    <span className={`text-sm font-bold truncate max-w-[120px] ${values.category ? (isDark ? 'text-white' : 'text-slate-900') : 'text-slate-400'}`}>
+                                                                        {values.category || 'Category'}
+                                                                    </span>
+                                                                </div>
+                                                                <FiChevronDown className={`text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                                            </button>
+
+                                                            <AnimatePresence>
+                                                                {isDropdownOpen && (
+                                                                    <>
+                                                                        <div className="fixed inset-0 z-[10]" onClick={() => setIsDropdownOpen(false)} />
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                                            className={`absolute left-0 right-0 top-full mt-3 z-[11] p-1 rounded-[1.5rem] shadow-2xl border ${isDark ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-100'
+                                                                                }`}
+                                                                        >
+                                                                            <div className="max-h-60 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                                                                                {categories.map((cat) => (
+                                                                                    <button
+                                                                                        key={cat._id}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setFieldValue('category', cat.categoryName);
+                                                                                            setIsDropdownOpen(false);
+                                                                                        }}
+                                                                                        className={`w-full text-left px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] transition-all ${values.category === cat.categoryName
+                                                                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-black'
+                                                                                            : isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-orange-50 hover:text-orange-600'
+                                                                                            }`}
+                                                                                    >
+                                                                                        {cat.categoryName}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    </>
+                                                                )}
+                                                            </AnimatePresence>
                                                         </div>
                                                         <ErrorMessage name="category" component={ErrorText} />
                                                     </div>

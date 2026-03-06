@@ -237,7 +237,7 @@ const Home = () => {
 
                                     {/* Category Badge - Top Left */}
                                     <div className="absolute top-4 left-4 z-10">
-                                        <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-black uppercase tracking-wider rounded-full shadow-sm">
+                                        <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-black tracking-wider rounded-full shadow-sm">
                                             {p.category}
                                         </span>
                                     </div>

@@ -6,10 +6,10 @@ const API_URL = "http://localhost:5000/api";
 
 export const getAllProducts = createAsyncThunk(
     "product/getAllProducts",
-    async ({ page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+    async ({ page = 1, limit = 12, category, search, minPrice, maxPrice, sortBy } = {}, { rejectWithValue }) => {
         try {
             const response = await axios.get(`${API_URL}/getAllProducts`, {
-                params: { page, limit }
+                params: { page, limit, category, search, minPrice, maxPrice, sortBy }
             });
             return response.data;
         } catch (error) {
