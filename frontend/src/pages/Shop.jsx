@@ -92,7 +92,7 @@ const Shop = () => {
         <div className="bg-surface min-h-screen text-primary font-sans selection:bg-accent selection:text-white">
             <Header />
 
-            <div className="container mx-auto px-6 pt-32 pb-16">
+            <div className="custom-container pt-32 pb-16">
                 <div className="flex flex-col lg:flex-row gap-16">
 
                     {/* Left Sidebar - Accordion Boutique Style */}

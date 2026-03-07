@@ -21,7 +21,7 @@ export default {
       colors: {
         primary: '#2A2A2A',
         secondary: '#E5E5E5',
-        accent: '#D4A373',
+        accent: '#FF7A30',
         surface: '#F9F9F9',
         muted: '#8D8D8D',
       },

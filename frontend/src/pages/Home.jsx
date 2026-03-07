@@ -93,7 +93,7 @@ const Home = () => {
                             </div>
 
                             {/* Hero Content */}
-                            <div className="relative z-10 h-full flex items-center justify-start text-left px-6 md:px-20 text-wrap w-full">
+                            <div className="relative z-10 h-full flex items-center justify-start text-left text-wrap w-full custom-container">
                                 <div className="space-y-6 max-w-4xl">
                                     <motion.span
                                         initial={{ opacity: 0, x: 20 }}
@@ -162,7 +162,7 @@ const Home = () => {
 
             {/* Features Info Bar */}
             <section className="bg-amber-50 py-12 border-b border-amber-100/50">
-                <div className="container mx-auto px-6">
+                <div className="custom-container">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-gray-800">
                         {tags?.map((feature, i) => (
                             <div key={i} className="flex flex-col items-center gap-2">
@@ -179,7 +179,7 @@ const Home = () => {
 
             {/* Categories Section */}
             <section className="py-12 bg-white">
-                <div className="container mx-auto px-6">
+                <div className="custom-container">
                     <div className="text-center mb-16 space-y-2">
                         <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Curated For You</span>
                         <h2 className="text-4xl md:text-5xl font-serif text-gray-900">Shop by Category</h2>
@@ -213,7 +213,7 @@ const Home = () => {
 
             {/* Trending Products */}
             <section className="py-12 bg-gray-50">
-                <div className="container mx-auto px-6">
+                <div className="custom-container">
                     <div className="flex items-end justify-between mb-12">
                         <div className="space-y-2">
                             <span className="text-amber-600 font-bold tracking-widest text-xs uppercase">Favorites</span>
@@ -286,7 +286,7 @@ const Home = () => {
             {/* Newsletter / CTA Section */}
             <section className="py-24 bg-gray-900 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                <div className="container mx-auto px-6 relative z-10 text-center max-w-2xl">
+                <div className="custom-container relative z-10 text-center max-w-2xl">
                     <h2 className="text-4xl md:text-5xl font-serif mb-6">Join the Design Club</h2>
                     <p className="text-gray-400 mb-8 text-lg font-light">
                         Sign up for our newsletter to receive exclusive design tips, early access to new collections, and 10% off your first order.

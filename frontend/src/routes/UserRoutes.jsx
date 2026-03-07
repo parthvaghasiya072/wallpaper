@@ -4,6 +4,7 @@ import Home from '../pages/Home';
 import Profile from '../pages/Profile';
 import Shop from '../pages/Shop';
 import ProductDetails from '../pages/ProductDetails';
+import Cart from '../pages/Cart';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const UserRoutes = () => {
@@ -15,6 +16,7 @@ const UserRoutes = () => {
 
             <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/cart" element={<Cart />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

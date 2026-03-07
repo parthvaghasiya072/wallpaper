@@ -5,7 +5,7 @@ import { FiInstagram, FiFacebook, FiTwitter, FiLinkedin, FiArrowRight } from 're
 const Footer = () => {
     return (
         <footer className="bg-gray-50 pt-12 pb-12 border-t border-gray-200">
-            <div className="container mx-auto px-6">
+            <div className="custom-container">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-8">
                     {/* Brand Column */}
                     <div className="space-y-6">
@@ -86,7 +86,7 @@ const Footer = () => {
                     <p className="text-gray-400 text-xs">
                         &copy; {new Date().getFullYear()} Lumière Wallpaper Co. All rights reserved.
                     </p>
-                    <div className="flex gap-6">
+                    <div className="custom-container">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3 opacity-50 grayscale hover:grayscale-0 transition-all" />
                         <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4 opacity-50 grayscale hover:grayscale-0 transition-all" />
                         <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4 opacity-50 grayscale hover:grayscale-0 transition-all" />

@@ -119,7 +119,7 @@ const Profile = () => {
                     <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[100%] bg-accent rounded-full blur-[120px]" />
                     <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[100%] bg-amber-200 rounded-full blur-[120px]" />
                 </div>
-                <div className="container mx-auto px-6 h-full flex items-end pb-20">
+                <div className="custom-container h-full flex items-end pb-20">
                     <motion.h1
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -130,7 +130,7 @@ const Profile = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 md:px-6 -mt-10 relative z-10">
+            <div className="custom-container -mt-10 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {/* Sidebar Navigation */}

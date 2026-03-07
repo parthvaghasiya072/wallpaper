@@ -12,12 +12,12 @@ export const loginUser = createAsyncThunk(
             // Extracts ID whether it's flat or nested in a 'data' property
             const user = response.data.data || response.data;
             const userId = user._id || user.id;
+            const token = user.token;
 
-            // Storing both the full object and specifically the ID for easy access
+            // Storing both the full object and specifically the ID/Token for easy access
             localStorage.setItem('user', JSON.stringify(response.data));
-            if (userId) {
-                localStorage.setItem('userId', userId);
-            }
+            if (userId) localStorage.setItem('userId', userId);
+            if (token) localStorage.setItem('token', token);
 
             return response.data;
         } catch (error) {
@@ -41,6 +41,7 @@ export const registerUser = createAsyncThunk(
 const initialState = {
     user: JSON.parse(localStorage.getItem('user')) || null,
     userId: localStorage.getItem('userId') || null,
+    token: localStorage.getItem('token') || null,
     isLoading: false,
     error: null,
 };
@@ -52,8 +53,10 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.userId = null;
+            state.token = null;
             localStorage.removeItem('user');
             localStorage.removeItem('userId');
+            localStorage.removeItem('token');
             toast.success('Logged out successfully');
         },
         clearError: (state) => {
@@ -72,6 +75,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.user = action.payload;
                 state.userId = user._id || user.id;
+                state.token = user.token;
                 toast.success(`Welcome back, ${user.firstName}!`);
             })
             .addCase(loginUser.rejected, (state, action) => {

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { FiSearch, FiHeart, FiShoppingBag, FiUser, FiMenu, FiX, FiLogOut, FiSettings, FiPackage } from 'react-icons/fi';
 import { logout } from '../redux/slices/authSlice'; // Adjust path if needed
+import { getCart } from '../redux/slices/cartSlice';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const Header = () => {
@@ -11,7 +12,8 @@ const Header = () => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     // Auth state from Redux
-    const { user } = useSelector((state) => state.auth || {});
+    const { user, userId } = useSelector((state) => state.auth || {});
+    const { items, loading: cartLoading, initialized: cartInitialized } = useSelector((state) => state.cart || { items: [], loading: false, initialized: false });
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -23,6 +25,12 @@ const Header = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (userId) {
+            dispatch(getCart());
+        }
+    }, [dispatch, userId]);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -45,10 +53,10 @@ const Header = () => {
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl ${isScrolled ? 'bg-white/70 py-6' : 'bg-white/10 py-6'
                     }`}
             >
-                <div className="container mx-auto px-6 flex items-center justify-between">
+                <div className="custom-container flex items-center justify-between">
                     {/* Logo */}
                     <Link to="/" className="text-2xl font-serif font-bold tracking-tighter text-gray-900">
-                        LUMIÈRE<span className="text-amber-600">.</span>
+                        LUMIÈRE<span className="text-accent">.</span>
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -57,7 +65,7 @@ const Header = () => {
                             <Link
                                 key={link.name}
                                 to={link.path}
-                                className={`text-sm font-medium tracking-wide transition-colors hover:text-amber-600 ${isScrolled ? 'text-gray-700' : 'text-gray-900'
+                                className={`text-sm font-medium tracking-wide transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'
                                     }`}
                             >
                                 {link.name}
@@ -67,26 +75,28 @@ const Header = () => {
 
                     {/* Icons & Actions */}
                     <div className="flex items-center gap-5">
-                        <button className={`transition-colors hover:text-amber-600 ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
+                        <button className={`transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
                             <FiSearch size={20} />
                         </button>
 
-                        <Link to="/wishlist" className={`hidden sm:block transition-colors hover:text-amber-600 ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
+                        <Link to="/wishlist" className={`hidden sm:block transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
                             <FiHeart size={20} />
                         </Link>
 
-                        <Link to="/cart" className={`relative transition-colors hover:text-amber-600 ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
+                        <Link to="/cart" className={`relative transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
                             <FiShoppingBag size={20} />
-                            <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
-                                0
-                            </span>
+                            {items && items.length > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">
+                                    {items.length}
+                                </span>
+                            )}
                         </Link>
 
                         {/* User Profile Dropdown */}
                         <div className="relative">
                             <button
                                 onClick={() => user ? setIsProfileOpen(!isProfileOpen) : navigate('/login')}
-                                className={`flex items-center gap-2 transition-colors hover:text-amber-600 focus:outline-none ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}
+                                className={`flex items-center gap-2 transition-colors hover:text-accent focus:outline-none ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}
                             >
                                 <FiUser size={20} />
                             </button>
@@ -101,7 +111,7 @@ const Header = () => {
                                         className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden ring-1 ring-black/5"
                                     >
                                         <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-amber-50/50 to-white/50">
-                                            <p className="text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">
+                                            <p className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
                                                 Welcome
                                             </p>
                                             <p className="text-sm font-bold text-primary truncate">

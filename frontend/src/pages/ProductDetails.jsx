@@ -10,11 +10,15 @@ import {
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { getSingleProduct, clearSelectedProduct, getAllProducts } from '../redux/slices/product.slice';
+import { addToCart } from '../redux/slices/cartSlice';
+import toast from 'react-hot-toast';
 
 const ProductDetails = () => {
     const { id } = useParams();
     const dispatch = useDispatch();
     const { selectedProduct, products, detailLoading, error } = useSelector((state) => state.product);
+    const { userId } = useSelector((state) => state.auth);
+    const { loading: cartLoading } = useSelector((state) => state.cart);
 
     const [activeImage, setActiveImage] = useState(0);
     const [selectedPaperIdx, setSelectedPaperIdx] = useState(0);
@@ -86,6 +90,39 @@ const ProductDetails = () => {
         }
     };
 
+    const handleAddToCart = () => {
+        if (!userId) {
+            toast.error("Please login to add items to your collection");
+            return;
+        }
+
+        if (!width || !height) {
+            toast.error("Please specify your wall dimensions");
+            return;
+        }
+
+        const cartItem = {
+            userId,
+            productId: selectedProduct._id,
+            titleName: selectedProduct.titleName,
+            image: selectedProduct.images[0],
+            quantity,
+            size: {
+                width: parseFloat(width),
+                height: parseFloat(height),
+                unit
+            },
+            paperMaterial: {
+                paperType: selectedProduct.paperOptions[selectedPaperIdx].paperType,
+                pricePerSqFt: selectedProduct.paperOptions[selectedPaperIdx].pricePerSqFt
+            },
+            totalSqFt,
+            price: parseFloat(calculatedTotal)
+        };
+
+        dispatch(addToCart(cartItem));
+    };
+
     if (detailLoading) {
         return (
             <div className="bg-surface min-h-screen">
@@ -124,7 +161,7 @@ const ProductDetails = () => {
         <div className="bg-[#FBFAF8] min-h-screen text-[#1A1A1A] font-sans selection:bg-orange-500 selection:text-white">
             <Header />
 
-            <main className="container mx-auto px-6 pt-32 pb-12">
+            <main className="custom-container pt-32 pb-12">
                 {/* Breadcrumbs */}
                 <nav className="flex items-center gap-3 mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
                     <Link to="/" className="hover:text-orange-500 transition-colors">home</Link>
@@ -139,7 +176,7 @@ const ProductDetails = () => {
                     <div className="lg:col-span-7 space-y-6">
                         {/* Main Image with Zoom */}
                         <div
-                            className="relative aspect-[4/5] md:aspect-video lg:aspect-[4/3] bg-white rounded-[1.5rem] overflow-hidden shadow-2xl border border-orange-50 cursor-crosshair group"
+                            className="relative aspect-[4/5] md:aspect-video lg:aspect-[4/3] bg-white rounded-[1rem] overflow-hidden shadow-2xl border border-orange-50 cursor-crosshair group"
                             onMouseMove={handleMouseMove}
                             onMouseEnter={() => setIsZooming(true)}
                             onMouseLeave={() => setIsZooming(false)}
@@ -204,7 +241,7 @@ const ProductDetails = () => {
                                     <button
                                         key={idx}
                                         onClick={() => setActiveImage(idx)}
-                                        className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden transition-all duration-500 border-2 ${activeImage === idx
+                                        className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden transition-all duration-500 border-2 ${activeImage === idx
                                             ? 'border-orange-500 scale-105 shadow-xl shadow-orange-500/20'
                                             : 'border-transparent opacity-60 hover:opacity-100'
                                             }`}
@@ -235,24 +272,22 @@ const ProductDetails = () => {
                                 <select
                                     value={selectedPaperIdx}
                                     onChange={(e) => setSelectedPaperIdx(parseInt(e.target.value))}
-                                    className="w-full appearance-none bg-white p-3 pr-16 rounded-lg border border-orange-200 focus:border-orange-400 outline-none transition-all shadow-sm hover:shadow-xl hover:shadow-orange-500/5 font-black uppercase tracking-widest text-sm cursor-pointer"
+                                    className="w-full appearance-none bg-orange-50 p-3 pr-10 rounded-lg border border-orange-200 focus:border-orange-400 outline-none font-black uppercase text-[12px] tracking-widest text-orange-600 cursor-pointer transition-all"
                                 >
                                     {selectedProduct.paperOptions?.map((opt, idx) => (
-                                        <option key={idx} value={idx}>
-                                            {opt.paperType} - {opt.pricePerSqFt}
+                                        <option key={idx} value={idx} className="bg-white text-primary uppercase">
+                                            {opt.paperType} — ₹{opt.pricePerSqFt}
                                         </option>
                                     ))}
                                 </select>
-                                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-orange-600">
-                                    <FiChevronDown size={20} />
-                                </div>
+                                <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-orange-600" size={14} />
                             </div>
 
                             {selectedProduct.paperOptions && selectedProduct.paperOptions[selectedPaperIdx] && (
                                 <div className="flex items-end justify-between px-2 pt-2">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Quotation</p>
-                                        <p className="text-xl font-black text-orange-400 tracking-tighter">
+                                        <p className="text-xl font-black text-orange-300 tracking-tighter">
                                             ₹ {selectedProduct.paperOptions[selectedPaperIdx].pricePerSqFt}
                                         </p>
                                     </div>
@@ -363,9 +398,13 @@ const ProductDetails = () => {
                                     </div>
                                 </div>
 
-                                <button className="w-full py-5 bg-orange-500 hover:bg-black text-white rounded-lg font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-orange-600/30 flex items-center justify-center gap-4 group">
+                                <button
+                                    onClick={handleAddToCart}
+                                    disabled={cartLoading}
+                                    className="w-full py-5 bg-orange-500 hover:bg-black text-white rounded-lg font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-orange-600/30 flex items-center justify-center gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     <FiShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-                                    Complete Purchase
+                                    {cartLoading ? 'Adding to Gallery...' : 'Add to Collection'}
                                 </button>
                             </div>
                         </section>
@@ -407,7 +446,7 @@ const ProductDetails = () => {
 
                 {/* Trending Products - Random 4 */}
                 <section className="bg-gray-50/50 mt-12 rounded-[3.5rem]">
-                    <div className="container mx-auto">
+                    <div className="custom-container">
                         <div className="flex items-end justify-between mb-12">
                             <div className="space-y-2">
                                 <span className="text-orange-600 font-bold tracking-widest text-[10px] uppercase">Curated Collection</span>

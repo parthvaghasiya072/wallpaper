@@ -50,7 +50,7 @@ const MinimalistOrangeBanner = () => {
     if (!banners || banners.length === 0) {
         return (
             <section className="py-12 bg-white">
-                <div className="container mx-auto px-6">
+                <div className="custom-container">
                     <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                         <p className="text-gray-400 font-medium">No banners found in your collection.</p>
                     </div>
@@ -63,9 +63,9 @@ const MinimalistOrangeBanner = () => {
 
     return (
         <section className="py-12 bg-white overflow-hidden">
-            <div className="container mx-auto px-6">
+            <div className="custom-container">
                 <div
-                    className="relative h-[500px] md:h-[650px] rounded-[2rem] overflow-hidden group border-2 border-orange-500 shadow-[0_25px_30px_-15px_rgba(249,115,22,0.5)] hover:shadow-[0_30px_50px_-10px_rgba(249,115,22,0.7)] hover:border-orange-400 transition-all duration-700 bg-orange-600 cursor-pointer"
+                    className="relative h-[350px] md:h-[450px] rounded-[2rem] overflow-hidden group border-2 border-orange-500 shadow-[0_25px_30px_-15px_rgba(249,115,22,0.5)] hover:shadow-[0_30px_50px_-10px_rgba(249,115,22,0.7)] hover:border-orange-400 transition-all duration-700 bg-orange-600 cursor-pointer"
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                 >
@@ -94,7 +94,7 @@ const MinimalistOrangeBanner = () => {
 
                             {/* Content Layer */}
                             <div className="relative h-full flex items-center z-20 px-8 md:px-20">
-                                <div className="max-w-3xl space-y-6 md:space-y-10">
+                                <div className="max-w-3xl space-y-4 md:space-y-6">
                                     <motion.div
                                         initial={{ opacity: 0, x: -20 }}
                                         whileInView={{ opacity: 1, x: 0 }}
@@ -106,9 +106,9 @@ const MinimalistOrangeBanner = () => {
                                         </span>
                                     </motion.div>
 
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         {/* Header with Hover Scale Effect (as before) */}
-                                        <h2 className="text-white text-5xl md:text-8xl font-serif font-black leading-[0.9] tracking-tighter transition-all duration-500 group-hover:scale-105 origin-left">
+                                        <h2 className="text-white text-3xl md:text-6xl font-serif font-black leading-[0.9] tracking-tighter transition-all duration-500 group-hover:scale-105 origin-left">
                                             {currentBanner.title?.split(' ').map((word, i) => (
                                                 <React.Fragment key={i}>
                                                     {i === 1 ? (
@@ -124,16 +124,16 @@ const MinimalistOrangeBanner = () => {
                                         </h2>
 
                                         {/* Description with Hover Color Effect (as before) */}
-                                        <p className="text-gray-200 text-lg md:text-2xl font-medium max-w-sm md:max-w-lg leading-relaxed border-l-4 border-orange-500/50 pl-8 transition-colors duration-500 group-hover:text-white">
+                                        <p className="text-gray-200 text-sm md:text-xl font-medium max-w-sm md:max-w-lg leading-relaxed border-l-4 border-orange-500/50 pl-8 transition-colors duration-500 group-hover:text-white">
                                             {currentBanner.description}
                                         </p>
                                     </div>
 
                                     {/* Buttons - Hide by default, slide up on hover (as before) */}
                                     <div
-                                        className="flex flex-wrap gap-6 pt-4 opacity-0 translate-y-10 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 ease-out"
+                                        className="flex flex-wrap gap-6 pt-2 opacity-0 translate-y-10 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 ease-out"
                                     >
-                                        <button className="group/btn px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-xl hover:bg-white hover:text-orange-600 border-2 border-orange-600 transition-all duration-500 flex items-center gap-3 shadow-[0_15px_30px_rgba(249,115,22,0.3)] hover:shadow-[0_20px_40px_rgba(249,115,22,0.5)] active:scale-95">
+                                        <button className="group/btn px-8 py-3 bg-orange-600 text-white rounded-2xl font-black text-lg hover:bg-white hover:text-orange-600 border-2 border-orange-600 transition-all duration-500 flex items-center gap-3 shadow-[0_15px_30px_rgba(249,115,22,0.3)] hover:shadow-[0_20px_40px_rgba(249,115,22,0.5)] active:scale-95">
                                             Shop Now <FiArrowRight className="group-hover/btn:translate-x-2 transition-transform duration-300" />
                                         </button>
                                     </div>
