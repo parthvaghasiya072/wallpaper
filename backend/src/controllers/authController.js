@@ -34,6 +34,7 @@ const createUser = async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
+            photo: user.photo,
             role: user.role,
             token: generateToken(user._id)
         });
@@ -64,6 +65,7 @@ const loginUser = async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
+            photo: user.photo,
             role: user.role,
             token: generateToken(user._id)
         });

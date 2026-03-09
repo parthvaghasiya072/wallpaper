@@ -9,6 +9,15 @@ import toast from 'react-hot-toast';
 import { getUserById, updateUser } from '../redux/slices/userSlice';
 import { getAllAddress, createAddress, updateAddressById, deleteAddressById } from '../redux/slices/addressSlice';
 
+// Helper for image URL
+const getImageUrl = (image) => {
+    if (!image) return null;
+    if (typeof image === 'string') {
+        return image.startsWith('http') ? image : `http://localhost:5000/uploads/${image}`;
+    }
+    return URL.createObjectURL(image);
+};
+
 const Profile = () => {
     const dispatch = useDispatch();
     const { user: authUser } = useSelector((state) => state.auth || {});
@@ -18,6 +27,21 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isAddingAddress, setIsAddingAddress] = useState(false);
     const [editingAddress, setEditingAddress] = useState(null);
+
+    const [selectedPhoto, setSelectedPhoto] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
+
+    const fileInputRef = React.useRef(null);
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedPhoto(file);
+            setPhotoPreview(URL.createObjectURL(file));
+            setIsEditing(true);
+            setActiveTab('personal');
+        }
+    };
 
     useEffect(() => {
         if (authUser?._id || authUser?.data?._id) {
@@ -85,10 +109,16 @@ const Profile = () => {
             formData.append(key, value);
         });
 
+        if (selectedPhoto) {
+            formData.append('photo', selectedPhoto);
+        }
+
         dispatch(updateUser({ id: userId, userData: formData }))
             .unwrap()
             .then(() => {
                 setIsEditing(false);
+                setSelectedPhoto(null);
+                setPhotoPreview(null);
             })
             .catch((err) => {
                 console.error("Update failed:", err);
@@ -145,12 +175,30 @@ const Profile = () => {
                                 <div className="relative group">
                                     <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-orange-400 to-amber-200 p-1 mb-4">
                                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                                            <span className="text-3xl font-serif font-bold text-primary italic">
-                                                {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
-                                            </span>
+                                            {photoPreview || user.photo ? (
+                                                <img
+                                                    src={photoPreview || getImageUrl(user.photo)}
+                                                    alt={`${user.firstName} ${user.lastName}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-3xl font-serif font-bold text-primary italic">
+                                                    {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
-                                    <button className="absolute bottom-4 right-0 p-2 bg-white rounded-full shadow-lg text-primary hover:text-orange-500 transition-colors border border-gray-100">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handlePhotoChange}
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="absolute bottom-4 right-0 p-2 bg-white rounded-full shadow-lg text-primary hover:text-orange-500 transition-colors border border-gray-100"
+                                    >
                                         <FiEdit2 size={14} />
                                     </button>
                                 </div>
@@ -222,6 +270,8 @@ const Profile = () => {
                                                                 type="button"
                                                                 onClick={() => {
                                                                     setIsEditing(false);
+                                                                    setSelectedPhoto(null);
+                                                                    setPhotoPreview(null);
                                                                     handleReset();
                                                                 }}
                                                                 className="flex items-center gap-2 px-6 py-3 rounded-2xl text-muted hover:text-red-500 transition-all font-bold hover:bg-red-50"

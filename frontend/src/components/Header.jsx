@@ -6,6 +6,15 @@ import { logout } from '../redux/slices/authSlice'; // Adjust path if needed
 import { getCart } from '../redux/slices/cartSlice';
 import { AnimatePresence, motion } from 'framer-motion';
 
+// Helper for image URL
+const getImageUrl = (image) => {
+    if (!image) return null;
+    if (typeof image === 'string') {
+        return image.startsWith('http') ? image : `http://localhost:5000/uploads/${image}`;
+    }
+    return URL.createObjectURL(image);
+};
+
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -13,6 +22,8 @@ const Header = () => {
 
     // Auth state from Redux
     const { user, userId } = useSelector((state) => state.auth || {});
+    const { selectedUser } = useSelector((state) => state.user || {});
+    const activeUser = (selectedUser?._id === userId) ? selectedUser : (user?.data || user);
     const { items, loading: cartLoading, initialized: cartInitialized } = useSelector((state) => state.cart || { items: [], loading: false, initialized: false });
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -95,29 +106,50 @@ const Header = () => {
                         {/* User Profile Dropdown */}
                         <div className="relative">
                             <button
-                                onClick={() => user ? setIsProfileOpen(!isProfileOpen) : navigate('/login')}
+                                onClick={() => activeUser ? setIsProfileOpen(!isProfileOpen) : navigate('/login')}
                                 className={`flex items-center gap-2 transition-colors hover:text-accent focus:outline-none ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}
                             >
-                                <FiUser size={20} />
+                                {activeUser?.photo ? (
+                                    <img
+                                        src={getImageUrl(activeUser.photo)}
+                                        alt="Profile"
+                                        className="w-7 h-7 rounded-full object-cover border border-gray-200"
+                                    />
+                                ) : (
+                                    <FiUser size={20} />
+                                )}
                             </button>
 
                             {/* Dropdown Menu */}
                             <AnimatePresence>
-                                {isProfileOpen && user && (
+                                {isProfileOpen && activeUser && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                         className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden ring-1 ring-black/5"
                                     >
-                                        <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-amber-50/50 to-white/50">
-                                            <p className="text-xs font-bold uppercase tracking-wider text-accent mb-1">
-                                                Welcome
-                                            </p>
-                                            <p className="text-sm font-bold text-primary truncate">
-                                                {user.firstName} {user.lastName}
-                                            </p>
-                                            <p className="text-[11px] text-muted truncate">{user.email}</p>
+                                        <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-br from-amber-50/50 to-white/50 flex gap-3 items-center">
+                                            {activeUser?.photo ? (
+                                                <img
+                                                    src={getImageUrl(activeUser.photo)}
+                                                    alt="Profile"
+                                                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                                />
+                                            ) : (
+                                                <div className="min-w-[40px] h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold italic font-serif text-lg">
+                                                    {activeUser.firstName?.charAt(0)}{activeUser.lastName?.charAt(0)}
+                                                </div>
+                                            )}
+                                            <div className="overflow-hidden">
+                                                <p className="text-[10px] font-bold uppercase tracking-wider text-accent mb-0.5">
+                                                    Welcome
+                                                </p>
+                                                <p className="text-sm font-bold text-primary truncate">
+                                                    {activeUser.firstName} {activeUser.lastName}
+                                                </p>
+                                                <p className="text-[11px] text-muted truncate">{activeUser.email}</p>
+                                            </div>
                                         </div>
 
                                         <div className="py-2">

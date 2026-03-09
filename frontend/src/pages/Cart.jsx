@@ -128,69 +128,69 @@ const Cart = () => {
                                                 {/* Product Image */}
                                                 <Link
                                                     to={`/product-details/${item.productId}`}
-                                                    className="sm:w-48 h-48 sm:h-auto overflow-hidden bg-surface relative"
+                                                    className="w-full sm:w-48 h-48 flex-shrink-0 overflow-hidden bg-surface relative group"
                                                     title={`View details for ${item.titleName}`}
                                                 >
                                                     <img
                                                         src={getImageUrl(item.image)}
                                                         alt={item.titleName}
-                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 rounded-2xl"
                                                     />
                                                 </Link>
 
                                                 {/* Content */}
-                                                <div className="flex-1 p-6 flex flex-col justify-between gap-4">
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <div>
-                                                            <h3 className=" text-xl font-bold mb-1 text-orange-600  group-hover:text-primary transition-colors">
+                                                <div className="flex-1 p-5 md:p-6 flex flex-col justify-between gap-4">
+                                                    <div className="flex justify-between items-start gap-3">
+                                                        <div className="flex-1">
+                                                            <h3 className="text-xl md:text-2xl font-black mb-2 text-primary group-hover:text-orange-500 transition-colors">
                                                                 {item.titleName}
                                                             </h3>
-                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-                                                                <span className="text-[11px] font-bold uppercase tracking-tighter text-muted flex items-center gap-1">
-                                                                    <div className="w-1 h-1 rounded-full bg-accent"></div>
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-600"></div>
                                                                     Size: {item.size.width} x {item.size.height} {item.size.unit}
                                                                 </span>
-                                                                <span className="text-[11px] font-bold uppercase tracking-tighter text-muted flex items-center gap-1">
-                                                                    <div className="w-1 h-1 rounded-full bg-accent"></div>
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-orange-600"></div>
                                                                     {item.paperMaterial.paperType}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <button
                                                             onClick={() => handleRemove(item._id)}
-                                                            className="p-2 text-muted hover:text-red-500 hover:bg-red-50 bg-surface rounded-lg transition-all duration-300"
+                                                            className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 bg-gray-50 rounded-xl transition-all duration-300"
                                                             title="Remove from collection"
                                                         >
-                                                            <FiTrash2 size={18} />
+                                                            <FiTrash2 size={20} />
                                                         </button>
                                                     </div>
 
                                                     <div className="flex items-center justify-between mt-auto pt-4">
                                                         {/* Quantity Controls */}
-                                                        <div className="flex items-center bg-surface border border-secondary rounded-xl p-1">
+                                                        <div className="flex items-center bg-gray-50 border border-gray-100 rounded-2xl p-1">
                                                             <button
                                                                 onClick={() => handleQuantityChange(item._id, item.quantity, -1)}
-                                                                className="p-2 hover:text-accent transition-colors disabled:opacity-30"
+                                                                className="p-2.5 hover:text-orange-500 transition-colors disabled:opacity-30"
                                                                 disabled={item.quantity <= 1}
                                                             >
-                                                                <FiMinus size={14} />
+                                                                <FiMinus size={16} />
                                                             </button>
-                                                            <span className="w-10 text-center font-bold text-sm">
+                                                            <span className="w-10 text-center font-black text-base">
                                                                 {item.quantity}
                                                             </span>
                                                             <button
                                                                 onClick={() => handleQuantityChange(item._id, item.quantity, 1)}
-                                                                className="p-2 hover:text-accent transition-colors"
+                                                                className="p-2.5 hover:text-orange-500 transition-colors"
                                                             >
-                                                                <FiPlus size={14} />
+                                                                <FiPlus size={16} />
                                                             </button>
                                                         </div>
 
                                                         {/* Price */}
                                                         <div className="text-right">
-                                                            <p className="text-xs text-muted font-bold uppercase tracking-widest mb-1">Price</p>
-                                                            <p className="text-xl font-black text-orange-500 tracking-tighter">
-                                                                ₹ {item.price}
+                                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-1">Price</p>
+                                                            <p className="text-2xl font-black text-orange-500 tracking-tighter">
+                                                                ₹{item.price}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -215,7 +215,7 @@ const Cart = () => {
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-center text-xs">
                                                 <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
-                                                <span className="font-bold text-orange-500">₹ {totalAmount}</span>
+                                                <span className="font-bold text-orange-500">₹ {totalAmount.toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-xs">
                                                 <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Estimated GST (18%)</span>
@@ -225,15 +225,15 @@ const Cart = () => {
                                                 <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Delivery</span>
                                                 <span className="text-green-600 font-bold uppercase text-[10px] tracking-widest">Free</span>
                                             </div>
-                                            <div className="flex justify-between items-center pt-2">
+                                            <div className="flex  flex-wrap justify-between items-center pt-2">
                                                 <span className="text-base font-black uppercase  text-primary">GRAND TOTAL</span>
-                                                <span className="text-2xl font-black text-orange-600 tracking-tighter">
-                                                    ₹ {totalAmount}
+                                                <span className="text-2xl font-black text-orange-600 tracking-tighter justify-end">
+                                                    ₹ {totalAmount.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="bg-amber-50 rounded-2xl p-4 flex gap-3 border border-amber-100">
+                                        <div className="bg-amber-50 rounded-2xl p-2 flex gap-3 border border-amber-100">
                                             <FiInfo className="text-amber-500 shrink-0 mt-0.5" size={20} />
                                             <p className="text-[12px] text-amber-900 leading-relaxed">
                                                 Walls are measured in Sq. Ft. The price includes premium printing, high-grade material, and shipping within India.

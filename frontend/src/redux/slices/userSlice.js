@@ -4,12 +4,16 @@ import toast from "react-hot-toast";
 
 const API_URL = "http://localhost:5000/api";
 
+const token = localStorage.getItem("token");
+
 // Get all users (role: user)
 export const getAllUsers = createAsyncThunk(
     "user/getAllUsers",
     async (_, { rejectWithValue }) => {
         try {
-            const response = await axios.get(`${API_URL}/getAllUsers`);
+            const response = await axios.get(`${API_URL}/getAllUsers`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             console.log("response", response.data);
             return response.data;
         } catch (error) {
@@ -23,7 +27,9 @@ export const getUserById = createAsyncThunk(
     "user/getUserById",
     async (id, { rejectWithValue }) => {
         try {
-            const response = await axios.get(`${API_URL}/getUser/${id}`);
+            const response = await axios.get(`${API_URL}/getUser/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Something went wrong");
@@ -37,7 +43,10 @@ export const updateUser = createAsyncThunk(
     async ({ id, userData }, { rejectWithValue }) => {
         try {
             const response = await axios.put(`${API_URL}/updateUser/${id}`, userData, {
-                headers: { "Content-Type": "multipart/form-data" }
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    Authorization: `Bearer ${token}`
+                }
             });
             return response.data;
         } catch (error) {
@@ -51,7 +60,9 @@ export const deleteUser = createAsyncThunk(
     "user/deleteUser",
     async (id, { rejectWithValue }) => {
         try {
-            await axios.delete(`${API_URL}/admin/deleteUserById/${id}`);
+            await axios.delete(`${API_URL}/admin/deleteUserById/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return id; // Return the ID precisely for the filter logic in the reducer
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Could not delete user");
