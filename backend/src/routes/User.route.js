@@ -4,6 +4,7 @@ const router = express.Router();
 const { createUser, loginUser } = require("../controllers/authController");
 const { createAddress, getAllAddress, getSingleAddress, updateAddress, deleteAddress } = require("../controllers/addressController");
 const { addToCart, getCart, updateCartItem, removeFromCart } = require("../controllers/cartController");
+const { getWishlist, addToWishlist, removeFromWishlist } = require("../controllers/wishlistController");
 const { protect } = require("../middleware/authMiddleware");
 
 // --- Auth Routes ---
@@ -22,5 +23,10 @@ router.post("/addToCart", protect, addToCart);
 router.get("/getCart", protect, getCart);
 router.put("/updateCart", protect, updateCartItem);
 router.delete("/removeFromCart/:cartItemId", protect, removeFromCart);
+
+// --- Wishlist Routes (Protected) ---
+router.get("/getWishlist", protect, getWishlist);
+router.post("/addToWishlist", protect, addToWishlist);
+router.delete("/removeFromWishlist/:productId", protect, removeFromWishlist);
 
 module.exports = router;

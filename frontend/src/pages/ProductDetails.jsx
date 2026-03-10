@@ -11,6 +11,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { getSingleProduct, clearSelectedProduct, getAllProducts } from '../redux/slices/product.slice';
 import { addToCart } from '../redux/slices/cartSlice';
+import { addToWishlist, removeFromWishlist, getWishlist } from '../redux/slices/wishlistSlice';
 import toast from 'react-hot-toast';
 
 const ProductDetails = () => {
@@ -18,6 +19,8 @@ const ProductDetails = () => {
     const dispatch = useDispatch();
     const { selectedProduct, products, detailLoading, error } = useSelector((state) => state.product);
     const { userId } = useSelector((state) => state.auth);
+    const { user: authUser } = useSelector((state) => state.auth || {});
+    const { items: wishlistItems = [] } = useSelector((state) => state.wishlist || {});
     const { loading: cartLoading } = useSelector((state) => state.cart);
 
     const [activeImage, setActiveImage] = useState(0);
@@ -37,6 +40,30 @@ const ProductDetails = () => {
         dispatch(getAllProducts({ limit: 50 })); // Fetch a larger set to pick from
         return () => dispatch(clearSelectedProduct());
     }, [dispatch, id]);
+
+    useEffect(() => {
+        if (authUser) {
+            dispatch(getWishlist());
+        }
+    }, [dispatch, authUser]);
+
+    const isWishlisted = (productId) => {
+        return wishlistItems?.some(item => item._id === productId);
+    };
+
+    const handleWishlistToggle = (e, productId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!authUser) {
+            toast.error("Please login to manage wishlist");
+            return;
+        }
+        if (isWishlisted(productId)) {
+            dispatch(removeFromWishlist(productId));
+        } else {
+            dispatch(addToWishlist(productId));
+        }
+    };
 
     useEffect(() => {
         if (products && products.length > 0) {
@@ -371,8 +398,11 @@ const ProductDetails = () => {
                                 </div>
 
                                 <div className="flex items-center gap-4 ml-auto">
-                                    <button className="p-4 bg-white rounded-2xl border border-orange-50 text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm">
-                                        <FiHeart size={20} />
+                                    <button
+                                        onClick={(e) => handleWishlistToggle(e, selectedProduct._id)}
+                                        className={`p-4 bg-white rounded-2xl border border-orange-50 ${isWishlisted(selectedProduct._id) ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500 hover:border-orange-100'} transition-all shadow-sm`}
+                                    >
+                                        <FiHeart size={20} fill={isWishlisted(selectedProduct._id) ? "currentColor" : "none"} />
                                     </button>
                                     <button className="p-4 bg-white rounded-2xl border border-orange-50 text-gray-400 hover:text-blue-500 hover:border-blue-100 transition-all shadow-sm">
                                         <FiShare2 size={20} />
@@ -473,8 +503,8 @@ const ProductDetails = () => {
                                         </div>
                                         <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                         <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-10">
-                                            <button onClick={(e) => e.preventDefault()} className="p-3 bg-white rounded-full text-gray-400 hover:text-red-500 hover:scale-110 transition-all shadow-xl">
-                                                <FiHeart size={20} />
+                                            <button onClick={(e) => handleWishlistToggle(e, p._id)} className={`p-3 bg-white rounded-full ${isWishlisted(p._id) ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500'} hover:scale-110 transition-all shadow-xl`}>
+                                                <FiHeart size={20} fill={isWishlisted(p._id) ? "currentColor" : "none"} />
                                             </button>
                                             <div className="p-3 bg-white rounded-full text-gray-400 hover:text-orange-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center">
                                                 <FiEye size={20} />

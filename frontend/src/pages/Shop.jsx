@@ -7,11 +7,15 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { getAllProducts } from '../redux/slices/product.slice';
 import { getAllCategories } from '../redux/slices/categorySlice';
+import { addToWishlist, removeFromWishlist, getWishlist } from '../redux/slices/wishlistSlice';
+import toast from 'react-hot-toast';
 
 const Shop = () => {
     const dispatch = useDispatch();
     const { products = [], loading, totalPages, currentPage: serverPage, totalProducts } = useSelector((state) => state.product || {});
     const { categories = [] } = useSelector((state) => state.category || {});
+    const { user: authUser } = useSelector((state) => state.auth || {});
+    const { items: wishlistItems = [] } = useSelector((state) => state.wishlist || {});
 
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -47,6 +51,30 @@ const Shop = () => {
     useEffect(() => {
         dispatch(getAllCategories());
     }, [dispatch]);
+
+    useEffect(() => {
+        if (authUser) {
+            dispatch(getWishlist());
+        }
+    }, [dispatch, authUser]);
+
+    const isWishlisted = (productId) => {
+        return wishlistItems?.some(item => item._id === productId);
+    };
+
+    const handleWishlistToggle = (e, productId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!authUser) {
+            toast.error("Please login to manage wishlist");
+            return;
+        }
+        if (isWishlisted(productId)) {
+            dispatch(removeFromWishlist(productId));
+        } else {
+            dispatch(addToWishlist(productId));
+        }
+    };
 
     const getImageUrl = (path) => {
         if (!path) return '';
@@ -278,13 +306,10 @@ const Shop = () => {
                                                     {/* Action Buttons - Heart and Eye Icons sliding in */}
                                                     <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-20">
                                                         <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                // Add wishlist logic here
-                                                            }}
-                                                            className="p-3 bg-white rounded-full text-gray-400 hover:text-red-500 hover:scale-110 transition-all shadow-xl"
+                                                            onClick={(e) => handleWishlistToggle(e, p._id)}
+                                                            className={`p-3 bg-white rounded-full ${isWishlisted(p._id) ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500'} hover:scale-110 transition-all shadow-xl`}
                                                         >
-                                                            <FiHeart size={20} />
+                                                            <FiHeart size={20} fill={isWishlisted(p._id) ? "currentColor" : "none"} />
                                                         </button>
                                                         <Link
                                                             to={`/product-details/${p._id}`}

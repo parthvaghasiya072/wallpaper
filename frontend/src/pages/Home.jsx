@@ -11,17 +11,41 @@ import { getAllTags } from '../redux/slices/tagslice';
 import { getAllCategories } from '../redux/slices/categorySlice';
 import MinimalistOrangeBanner from '../components/MinimalistOrangeBanner';
 import { getAllProducts } from '../redux/slices/product.slice';
+import { addToWishlist, removeFromWishlist, getWishlist } from '../redux/slices/wishlistSlice';
+import toast from 'react-hot-toast';
 
 const Home = () => {
     const dispatch = useDispatch();
     const { heroSections, loading } = useSelector((state) => state.hero || { heroSections: [], loading: false });
     const { products } = useSelector((state) => state.product || { products: [], loading: false });
-    console.log('products', products);
+    const { user: authUser } = useSelector((state) => state.auth || {});
+    const { items: wishlistItems = [] } = useSelector((state) => state.wishlist || {});
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
         dispatch(getHeroSections());
-    }, [dispatch]);
+        if (authUser) {
+            dispatch(getWishlist());
+        }
+    }, [dispatch, authUser]);
+
+    const isWishlisted = (productId) => {
+        return wishlistItems?.some(item => item._id === productId);
+    };
+
+    const handleWishlistToggle = (e, productId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!authUser) {
+            toast.error("Please login to manage wishlist");
+            return;
+        }
+        if (isWishlisted(productId)) {
+            dispatch(removeFromWishlist(productId));
+        } else {
+            dispatch(addToWishlist(productId));
+        }
+    };
 
     // Auto-slide logic
     useEffect(() => {
@@ -248,12 +272,10 @@ const Home = () => {
                                     {/* Action Buttons - Heart and Eye Icons sliding in */}
                                     <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-10">
                                         <button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                            }}
-                                            className="p-3 bg-white rounded-full text-gray-400 hover:text-red-500 hover:scale-110 transition-all shadow-xl pointer-events-auto"
+                                            onClick={(e) => handleWishlistToggle(e, p._id)}
+                                            className={`p-3 bg-white rounded-full ${isWishlisted(p._id) ? 'text-orange-500' : 'text-gray-400 hover:text-orange-500'} hover:scale-110 transition-all shadow-xl pointer-events-auto`}
                                         >
-                                            <FiHeart size={20} />
+                                            <FiHeart size={20} fill={isWishlisted(p._id) ? "currentColor" : "none"} />
                                         </button>
                                         <Link
                                             to={`/product-details/${p._id}`}

@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { FiSearch, FiHeart, FiShoppingBag, FiUser, FiMenu, FiX, FiLogOut, FiSettings, FiPackage } from 'react-icons/fi';
 import { logout } from '../redux/slices/authSlice'; // Adjust path if needed
 import { getCart } from '../redux/slices/cartSlice';
+import { getWishlist } from '../redux/slices/wishlistSlice';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // Helper for image URL
@@ -25,6 +26,7 @@ const Header = () => {
     const { selectedUser } = useSelector((state) => state.user || {});
     const activeUser = (selectedUser?._id === userId) ? selectedUser : (user?.data || user);
     const { items, loading: cartLoading, initialized: cartInitialized } = useSelector((state) => state.cart || { items: [], loading: false, initialized: false });
+    const { items: wishlistItems } = useSelector((state) => state.wishlist || { items: [] });
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -40,6 +42,7 @@ const Header = () => {
     useEffect(() => {
         if (userId) {
             dispatch(getCart());
+            dispatch(getWishlist());
         }
     }, [dispatch, userId]);
 
@@ -90,8 +93,13 @@ const Header = () => {
                             <FiSearch size={20} />
                         </button>
 
-                        <Link to="/wishlist" className={`hidden sm:block transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
+                        <Link to="/profile" state={{ activeTab: 'wishlist' }} className={`hidden sm:block relative transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
                             <FiHeart size={20} />
+                            {wishlistItems && wishlistItems.length > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">
+                                    {wishlistItems.length}
+                                </span>
+                            )}
                         </Link>
 
                         <Link to="/cart" className={`relative transition-colors hover:text-accent ${isScrolled ? 'text-gray-700' : 'text-gray-900'}`}>
@@ -232,7 +240,7 @@ const Header = () => {
                                 </Link>
                             ))}
                             <hr className="border-gray-100 my-2" />
-                            <Link to="/wishlist" className="flex items-center gap-2 text-gray-600 hover:text-amber-600">
+                            <Link to="/profile" state={{ activeTab: 'wishlist' }} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-gray-600 hover:text-amber-600">
                                 <FiHeart /> Wishlist
                             </Link>
                             <Link to="/cart" className="flex items-center gap-2 text-gray-600 hover:text-amber-600">

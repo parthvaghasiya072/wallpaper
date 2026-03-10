@@ -3,11 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2 } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye } from 'react-icons/fi';
 import Header from '../components/Header';
 import toast from 'react-hot-toast';
 import { getUserById, updateUser } from '../redux/slices/userSlice';
 import { getAllAddress, createAddress, updateAddressById, deleteAddressById } from '../redux/slices/addressSlice';
+import { getWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
+import { Link, useLocation } from 'react-router-dom';
 
 // Helper for image URL
 const getImageUrl = (image) => {
@@ -23,7 +25,9 @@ const Profile = () => {
     const { user: authUser } = useSelector((state) => state.auth || {});
     const { selectedUser, loading, detailLoading } = useSelector((state) => state.user);
     const { addresses, loading: addressLoading } = useSelector((state) => state.address);
-    const [activeTab, setActiveTab] = useState('personal');
+    const { items: wishlistItems, loading: wishlistLoading } = useSelector((state) => state.wishlist || {});
+    const location = useLocation();
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'personal');
     const [isEditing, setIsEditing] = useState(false);
     const [isAddingAddress, setIsAddingAddress] = useState(false);
     const [editingAddress, setEditingAddress] = useState(null);
@@ -55,7 +59,16 @@ const Profile = () => {
         if (activeTab === 'address' && userId) {
             dispatch(getAllAddress(userId));
         }
+        if (activeTab === 'wishlist' && userId) {
+            dispatch(getWishlist());
+        }
     }, [dispatch, activeTab, authUser]);
+
+    useEffect(() => {
+        if (location.state?.activeTab) {
+            setActiveTab(location.state.activeTab);
+        }
+    }, [location.state]);
 
     if (!authUser) return null;
 
@@ -619,7 +632,110 @@ const Profile = () => {
                                 </motion.div>
                             )}
 
-                            {activeTab !== 'personal' && activeTab !== 'address' && (
+                            {activeTab === 'wishlist' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="p-8 md:p-12"
+                                >
+                                    <div className="mb-8">
+                                        <h3 className="text-3xl font-bold text-primary mb-2 italic font-serif">My Wishlist</h3>
+                                        <p className="text-muted font-medium">Your favorite pieces saved for later.</p>
+                                    </div>
+
+                                    {wishlistLoading ? (
+                                        <div className="flex justify-center py-20">
+                                            <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    ) : wishlistItems?.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            {wishlistItems.map((item) => (
+                                                <motion.div
+                                                    key={item._id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                    transition={{ duration: 0.4 }}
+                                                    className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-100 shadow-[0_12px_20px_-10px_rgba(249,115,22,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(249,115,22,0.3)] hover:border-orange-300"
+                                                >
+                                                    {/* Image Link */}
+                                                    <div className="relative h-48 overflow-hidden bg-gray-50">
+                                                        <Link to={`/product-details/${item._id}`} className="block w-full h-full">
+                                                            <img
+                                                                src={item.images && item.images.length > 0 ? getImageUrl(item.images[0]) : ''}
+                                                                alt={item.titleName}
+                                                                className="w-full h-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-out"
+                                                            />
+                                                            {/* Subtle Overlay on Hover */}
+                                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                                        </Link>
+
+                                                        {/* Category Badge - Top Left */}
+                                                        {item.category && (
+                                                            <div className="absolute top-4 left-4 z-10">
+                                                                <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-black tracking-wider rounded-full shadow-sm">
+                                                                    {item.category}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Action Buttons - Heart and Eye Icons sliding in */}
+                                                        <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-20">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    dispatch(removeFromWishlist(item._id));
+                                                                    toast.success("Removed from wishlist");
+                                                                }}
+                                                                className="p-3 bg-white rounded-full text-orange-500 hover:text-red-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center"
+                                                            >
+                                                                <FiHeart size={20} fill="currentColor" />
+                                                            </button>
+                                                            <Link
+                                                                to={`/product-details/${item._id}`}
+                                                                className="p-3 bg-white rounded-full text-gray-400 hover:text-orange-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center"
+                                                            >
+                                                                <FiEye size={20} />
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Content */}
+                                                    <div className="p-3">
+                                                        <div className="flex flex-col gap-1">
+                                                            <Link to={`/product-details/${item._id}`}>
+                                                                <h3 className="text-xl font-serif font-black text-orange-600 transition-colors line-clamp-1">
+                                                                    {item.titleName}
+                                                                </h3>
+                                                            </Link>
+                                                        </div>
+                                                        <p className="text-gray-500 text-sm line-clamp-1 mt-1 font-medium leading-relaxed">
+                                                            {item.description}
+                                                        </p>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="border-2 border-dashed border-gray-200 rounded-[2.5rem] p-20 text-center bg-gray-50/50">
+                                            <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6 text-orange-400">
+                                                <FiHeart size={32} />
+                                            </div>
+                                            <h4 className="text-2xl font-bold text-primary mb-2 italic font-serif">Wishlist is Empty</h4>
+                                            <p className="text-muted mb-8 max-w-xs mx-auto">You haven't added any pieces to your wishlist yet. Discover new designs in our collections.</p>
+                                            <Link
+                                                to="/shop"
+                                                className="inline-flex px-8 py-3 bg-primary text-white rounded-2xl font-bold items-center gap-2 hover:bg-black transition-all shadow-xl"
+                                            >
+                                                Explore Gallery
+                                            </Link>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
