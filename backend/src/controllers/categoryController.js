@@ -85,8 +85,6 @@ const updateCategory = async (req, res) => {
     }
 }
 
-
-
 const deleteCategory = async (req, res) => {
     try {
         const category = await Category.findByIdAndDelete(req.params.id)

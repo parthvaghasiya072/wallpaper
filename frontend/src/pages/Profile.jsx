@@ -648,6 +648,7 @@ const Profile = () => {
                                             <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
                                         </div>
                                     ) : wishlistItems?.length > 0 ? (
+                                        <div className="max-h-[450px] overflow-y-auto pr-2">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                             {wishlistItems.map((item) => (
                                                 <motion.div
@@ -716,6 +717,7 @@ const Profile = () => {
                                                     </div>
                                                 </motion.div>
                                             ))}
+                                        </div>
                                         </div>
                                     ) : (
                                         <div className="border-2 border-dashed border-gray-200 rounded-[2.5rem] p-20 text-center bg-gray-50/50">

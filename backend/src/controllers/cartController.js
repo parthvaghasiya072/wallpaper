@@ -1,7 +1,7 @@
 const Cart = require('../models/CartModel');
 
 // Add item to cart
-exports.addToCart = async (req, res) => {
+export const addToCart = async (req, res) => {
     try {
         const { productId, titleName, image, quantity, size, paperMaterial, totalSqFt, price } = req.body;
         const userId = req.user._id;
@@ -45,7 +45,7 @@ exports.addToCart = async (req, res) => {
 };
 
 // Get user cart
-exports.getCart = async (req, res) => {
+export const getCart = async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.user._id });
         if (!cart) {
@@ -58,7 +58,7 @@ exports.getCart = async (req, res) => {
 };
 
 // Update cart item quantity
-exports.updateCartItem = async (req, res) => {
+export const updateCartItem = async (req, res) => {
     try {
         const { cartItemId, quantity } = req.body;
         const cart = await Cart.findOne({ userId: req.user._id });
@@ -82,7 +82,7 @@ exports.updateCartItem = async (req, res) => {
 };
 
 // Remove item from cart
-exports.removeFromCart = async (req, res) => {
+export const removeFromCart = async (req, res) => {
     try {
         const { cartItemId } = req.params;
         const cart = await Cart.findOne({ userId: req.user._id });
