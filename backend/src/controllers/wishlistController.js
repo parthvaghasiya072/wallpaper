@@ -1,7 +1,7 @@
 const Wishlist = require("../models/wishlistModel");
 
 // Get user's wishlist
-export const getWishlist = async (req, res) => {
+ const getWishlist = async (req, res) => {
     try {
         const userId = req.user._id;
         let wishlist = await Wishlist.findOne({ user: userId }).populate("products");
@@ -24,7 +24,7 @@ export const getWishlist = async (req, res) => {
 };
 
 // Add product to wishlist
-export const addToWishlist = async (req, res) => {
+ const addToWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
         const userId = req.user._id;
@@ -57,7 +57,7 @@ export const addToWishlist = async (req, res) => {
 };
 
 // Remove product from wishlist
-export const removeFromWishlist = async (req, res) => {
+ const removeFromWishlist = async (req, res) => {
     try {
         const { productId } = req.params;
         const userId = req.user._id;
@@ -91,4 +91,10 @@ export const removeFromWishlist = async (req, res) => {
             error: error.message,
         });
     }
+};
+
+module.exports = {
+    getWishlist,
+    addToWishlist,
+    removeFromWishlist
 };

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { FiSearch, FiHeart, FiShoppingBag, FiUser, FiMenu, FiX, FiLogOut, FiSettings, FiPackage } from 'react-icons/fi';
-import { logout } from '../redux/slices/authSlice'; // Adjust path if needed
-import { getCart } from '../redux/slices/cartSlice';
-import { getWishlist } from '../redux/slices/wishlistSlice';
+import { logout } from '../redux/slices/authSlice';
+import { getCart, clearCartState } from '../redux/slices/cartSlice';
+import { getWishlist, clearWishlistState } from '../redux/slices/wishlistSlice';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // Helper for image URL
@@ -48,6 +48,8 @@ const Header = () => {
 
     const handleLogout = () => {
         dispatch(logout());
+        dispatch(clearCartState());
+        dispatch(clearWishlistState());
         navigate('/login');
         setIsProfileOpen(false);
     };
@@ -173,7 +175,8 @@ const Header = () => {
                                             </Link>
 
                                             <Link
-                                                to="/orders"
+                                                to="/profile"
+                                                state={{ activeTab: 'orders' }}
                                                 onClick={() => setIsProfileOpen(false)}
                                                 className="flex items-center gap-3 px-5 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-accent transition-all duration-300"
                                             >

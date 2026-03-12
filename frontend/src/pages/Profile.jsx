@@ -3,10 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye, FiEyeOff, FiLock, FiHash, FiGlobe } from 'react-icons/fi';
 import Header from '../components/Header';
 import toast from 'react-hot-toast';
-import { getUserById, updateUser } from '../redux/slices/userSlice';
+import { getUserById, updateUser, changePassword } from '../redux/slices/userSlice';
 import { getAllAddress, createAddress, updateAddressById, deleteAddressById } from '../redux/slices/addressSlice';
 import { getWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
 import { Link, useLocation } from 'react-router-dom';
@@ -15,7 +15,9 @@ import { Link, useLocation } from 'react-router-dom';
 const getImageUrl = (image) => {
     if (!image) return null;
     if (typeof image === 'string') {
-        return image.startsWith('http') ? image : `http://localhost:5000/uploads/${image}`;
+        if (image.startsWith('http')) return image;
+        if (image.startsWith('/')) return `http://localhost:5000${image}`;
+        return `http://localhost:5000/uploads/${image}`;
     }
     return URL.createObjectURL(image);
 };
@@ -34,6 +36,18 @@ const Profile = () => {
 
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
+
+    const [passwordForm, setPasswordForm] = useState({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [showPasswords, setShowPasswords] = useState({
+        old: false,
+        new: false,
+        confirm: false
+    });
+    const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
     const fileInputRef = React.useRef(null);
 
@@ -132,9 +146,45 @@ const Profile = () => {
                 setIsEditing(false);
                 setSelectedPhoto(null);
                 setPhotoPreview(null);
+                toast.success("Profile updated successfully!");
             })
             .catch((err) => {
                 console.error("Update failed:", err);
+                toast.error(err || "Update failed");
+            });
+    };
+
+    const handlePasswordChange = (e) => {
+        e.preventDefault();
+        const userId = user._id || user.id;
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            toast.error("New passwords do not match!");
+            return;
+        }
+
+        if (passwordForm.newPassword.length < 6) {
+            toast.error("Password must be at least 6 characters long");
+            return;
+        }
+
+        setIsPasswordLoading(true);
+        dispatch(changePassword({
+            id: userId,
+            passwordData: {
+                oldPassword: passwordForm.oldPassword,
+                newPassword: passwordForm.newPassword
+            }
+        }))
+            .unwrap()
+            .then(() => {
+                toast.success("Password changed successfully!");
+                setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                setIsPasswordLoading(false);
+            })
+            .catch((err) => {
+                toast.error(err || "Failed to change password");
+                setIsPasswordLoading(false);
             });
     };
 
@@ -153,7 +203,7 @@ const Profile = () => {
     };
 
     return (
-        <div className=" bg-[#F0F2F5] pb-20">
+        <div className=" bg-[#F0F2F5] pb-14">
             <Header />
 
             {/* Elegant Background Header */}
@@ -266,7 +316,7 @@ const Profile = () => {
                                             <Form>
                                                 <div className="flex items-center justify-between mb-12">
                                                     <div>
-                                                        <h3 className="text-3xl font-bold text-primary mb-2 italic font-serif">Personal Information</h3>
+                                                        <h3 className="text-3xl font-bold text-primary mb-2 font-serif">Personal Information</h3>
                                                         <p className="text-muted font-medium">Manage your personal details and account preferences.</p>
                                                     </div>
                                                     {!isEditing ? (
@@ -443,9 +493,9 @@ const Profile = () => {
                                     animate={{ opacity: 1, x: 0 }}
                                     className="p-8 md:p-12"
                                 >
-                                    <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="text-3xl font-bold text-primary mb-2 italic font-serif">Manage Addresses</h3>
+                                            <h3 className="text-3xl font-bold text-primary mb-2 font-serif">Manage Addresses</h3>
                                             <p className="text-muted font-medium">Add, edit or remove your delivery addresses.</p>
                                         </div>
                                         <button
@@ -460,7 +510,7 @@ const Profile = () => {
                                     </div>
 
                                     {isAddingAddress || editingAddress ? (
-                                        <div className="bg-orange-50/30 border-2 border-orange-100 rounded-[2rem] p-8 mb-12">
+                                        <div className="bg-orange-50/30 border-2 border-orange-100 rounded-[2rem] p-8">
                                             <h4 className="text-xl font-bold text-primary mb-6 italic font-serif">
                                                 {editingAddress ? 'Edit Address' : 'Add New Address'}
                                             </h4>
@@ -495,34 +545,104 @@ const Profile = () => {
                                                 }}
                                             >
                                                 {({ errors, touched }) => (
-                                                    <Form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                        <div className="space-y-4">
-                                                            <div>
-                                                                <label className="text-[10px] font-black uppercase text-muted mb-2 block">Full Name</label>
-                                                                <Field name="fullName" className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. John Doe" />
+                                                    <Form className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                                                        <div className="space-y-8">
+                                                            <div className="group">
+                                                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">Full Name</label>
+                                                                <div className="relative group/input">
+                                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                                        <FiUser size={18} />
+                                                                    </div>
+                                                                    <Field
+                                                                        name="fullName"
+                                                                        className={`w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 ${errors.fullName && touched.fullName ? 'border-red-200 bg-red-50/30' : 'border-gray-50 focus:border-orange-500'} outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5`}
+                                                                        placeholder="e.g. John Doe"
+                                                                    />
+                                                                    <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                                    <ErrorMessage name="fullName" component="div" className="text-red-500 text-[10px] absolute -bottom-6 left-1 font-bold" />
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-black uppercase text-muted mb-2 block">Mobile Number</label>
-                                                                <Field name="mobileNo" className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="e.g. 9876543210" />
+
+                                                            <div className="group">
+                                                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">Mobile Number</label>
+                                                                <div className="relative group/input">
+                                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                                        <FiPhone size={18} />
+                                                                    </div>
+                                                                    <Field
+                                                                        name="mobileNo"
+                                                                        className={`w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 ${errors.mobileNo && touched.mobileNo ? 'border-red-200 bg-red-50/30' : 'border-gray-50 focus:border-orange-500'} outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5`}
+                                                                        placeholder="e.g. 1234567890"
+                                                                    />
+                                                                    <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                                    <ErrorMessage name="mobileNo" component="div" className="text-red-500 text-[10px] absolute -bottom-6 left-1 font-bold" />
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-black uppercase text-muted mb-2 block">Pincode</label>
-                                                                <Field name="pincode" className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="6-digit code" />
+
+                                                            <div className="group">
+                                                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">Pincode</label>
+                                                                <div className="relative group/input">
+                                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                                        <FiHash size={18} />
+                                                                    </div>
+                                                                    <Field
+                                                                        name="pincode"
+                                                                        className={`w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 ${errors.pincode && touched.pincode ? 'border-red-200 bg-red-50/30' : 'border-gray-50 focus:border-orange-500'} outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5`}
+                                                                        placeholder="6-digit code"
+                                                                    />
+                                                                    <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                                    <ErrorMessage name="pincode" component="div" className="text-red-500 text-[10px] absolute -bottom-6 left-1 font-bold" />
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div className="space-y-4">
-                                                            <div>
-                                                                <label className="text-[10px] font-black uppercase text-muted mb-2 block">Address (Area and Street)</label>
-                                                                <Field name="addressLine" className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-orange-500 outline-none transition-all font-semibold" placeholder="House No, Building, Street" />
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <label className="text-[10px] font-black uppercase text-muted mb-2 block">City</label>
-                                                                    <Field name="city" className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-orange-500 outline-none transition-all font-semibold" />
+
+                                                        <div className="space-y-8">
+                                                            <div className="group">
+                                                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">Address (Area and Street)</label>
+                                                                <div className="relative group/input">
+                                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                                        <FiHome size={18} />
+                                                                    </div>
+                                                                    <Field
+                                                                        name="addressLine"
+                                                                        className={`w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 ${errors.addressLine && touched.addressLine ? 'border-red-200 bg-red-50/30' : 'border-gray-50 focus:border-orange-500'} outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5`}
+                                                                        placeholder="House No, Building, Street"
+                                                                    />
+                                                                    <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                                    <ErrorMessage name="addressLine" component="div" className="text-red-500 text-[10px] absolute -bottom-6 left-1 font-bold" />
                                                                 </div>
-                                                                <div>
-                                                                    <label className="text-[10px] font-black uppercase text-muted mb-2 block">State</label>
-                                                                    <Field name="state" className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-orange-500 outline-none transition-all font-semibold" />
+                                                            </div>
+
+                                                            <div className="grid grid-cols-2 gap-6">
+                                                                <div className="group">
+                                                                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">City</label>
+                                                                    <div className="relative group/input">
+                                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                                            <FiMapPin size={18} />
+                                                                        </div>
+                                                                        <Field
+                                                                            name="city"
+                                                                            placeholder="e.g. City"
+                                                                            className={`w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 ${errors.city && touched.city ? 'border-red-200 bg-red-50/30' : 'border-gray-50 focus:border-orange-500'} outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5`}
+                                                                        />
+                                                                        <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                                        <ErrorMessage name="city" component="div" className="text-red-500 text-[10px] absolute -bottom-6 left-1 font-bold" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="group">
+                                                                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">State</label>
+                                                                    <div className="relative group/input">
+                                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                                            <FiGlobe size={18} />
+                                                                        </div>
+                                                                        <Field
+                                                                            name="state"
+                                                                            placeholder="e.g. Gujarat"
+                                                                            className={`w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 ${errors.state && touched.state ? 'border-red-200 bg-red-50/30' : 'border-gray-50 focus:border-orange-500'} outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5`}
+                                                                        />
+                                                                        <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                                        <ErrorMessage name="state" component="div" className="text-red-500 text-[10px] absolute -bottom-6 left-1 font-bold" />
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-4 pt-2">
@@ -639,7 +759,7 @@ const Profile = () => {
                                     className="p-8 md:p-12"
                                 >
                                     <div className="mb-8">
-                                        <h3 className="text-3xl font-bold text-primary mb-2 italic font-serif">My Wishlist</h3>
+                                        <h3 className="text-3xl font-bold text-primary mb-2 font-serif">My Wishlist</h3>
                                         <p className="text-muted font-medium">Your favorite pieces saved for later.</p>
                                     </div>
 
@@ -649,75 +769,75 @@ const Profile = () => {
                                         </div>
                                     ) : wishlistItems?.length > 0 ? (
                                         <div className="max-h-[450px] overflow-y-auto pr-2">
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            {wishlistItems.map((item) => (
-                                                <motion.div
-                                                    key={item._id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.9 }}
-                                                    transition={{ duration: 0.4 }}
-                                                    className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-100 shadow-[0_12px_20px_-10px_rgba(249,115,22,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(249,115,22,0.3)] hover:border-orange-300"
-                                                >
-                                                    {/* Image Link */}
-                                                    <div className="relative h-48 overflow-hidden bg-gray-50">
-                                                        <Link to={`/product-details/${item._id}`} className="block w-full h-full">
-                                                            <img
-                                                                src={item.images && item.images.length > 0 ? getImageUrl(item.images[0]) : ''}
-                                                                alt={item.titleName}
-                                                                className="w-full h-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-out"
-                                                            />
-                                                            {/* Subtle Overlay on Hover */}
-                                                            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                                        </Link>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                {wishlistItems.map((item) => (
+                                                    <motion.div
+                                                        key={item._id}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.9 }}
+                                                        transition={{ duration: 0.4 }}
+                                                        className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-orange-100 shadow-[0_12px_20px_-10px_rgba(249,115,22,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(249,115,22,0.3)] hover:border-orange-300"
+                                                    >
+                                                        {/* Image Link */}
+                                                        <div className="relative h-48 overflow-hidden bg-gray-50">
+                                                            <Link to={`/product-details/${item._id}`} className="block w-full h-full">
+                                                                <img
+                                                                    src={item.images && item.images.length > 0 ? getImageUrl(item.images[0]) : ''}
+                                                                    alt={item.titleName}
+                                                                    className="w-full h-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 ease-out"
+                                                                />
+                                                                {/* Subtle Overlay on Hover */}
+                                                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                                            </Link>
 
-                                                        {/* Category Badge - Top Left */}
-                                                        {item.category && (
-                                                            <div className="absolute top-4 left-4 z-10">
-                                                                <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-black tracking-wider rounded-full shadow-sm">
-                                                                    {item.category}
-                                                                </span>
+                                                            {/* Category Badge - Top Left */}
+                                                            {item.category && (
+                                                                <div className="absolute top-4 left-4 z-10">
+                                                                    <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-black tracking-wider rounded-full shadow-sm">
+                                                                        {item.category}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Action Buttons - Heart and Eye Icons sliding in */}
+                                                            <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-20">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        dispatch(removeFromWishlist(item._id));
+                                                                        toast.success("Removed from wishlist");
+                                                                    }}
+                                                                    className="p-3 bg-white rounded-full text-orange-500 hover:text-red-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center"
+                                                                >
+                                                                    <FiHeart size={20} fill="currentColor" />
+                                                                </button>
+                                                                <Link
+                                                                    to={`/product-details/${item._id}`}
+                                                                    className="p-3 bg-white rounded-full text-gray-400 hover:text-orange-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center"
+                                                                >
+                                                                    <FiEye size={20} />
+                                                                </Link>
                                                             </div>
-                                                        )}
-
-                                                        {/* Action Buttons - Heart and Eye Icons sliding in */}
-                                                        <div className="absolute top-4 right-4 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 transition-all duration-500 z-20">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    e.stopPropagation();
-                                                                    dispatch(removeFromWishlist(item._id));
-                                                                    toast.success("Removed from wishlist");
-                                                                }}
-                                                                className="p-3 bg-white rounded-full text-orange-500 hover:text-red-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center"
-                                                            >
-                                                                <FiHeart size={20} fill="currentColor" />
-                                                            </button>
-                                                            <Link
-                                                                to={`/product-details/${item._id}`}
-                                                                className="p-3 bg-white rounded-full text-gray-400 hover:text-orange-500 hover:scale-110 transition-all shadow-xl flex items-center justify-center"
-                                                            >
-                                                                <FiEye size={20} />
-                                                            </Link>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Content */}
-                                                    <div className="p-3">
-                                                        <div className="flex flex-col gap-1">
-                                                            <Link to={`/product-details/${item._id}`}>
-                                                                <h3 className="text-xl font-serif font-black text-orange-600 transition-colors line-clamp-1">
-                                                                    {item.titleName}
-                                                                </h3>
-                                                            </Link>
+                                                        {/* Content */}
+                                                        <div className="p-3">
+                                                            <div className="flex flex-col gap-1">
+                                                                <Link to={`/product-details/${item._id}`}>
+                                                                    <h3 className="text-xl font-serif font-black text-orange-600 transition-colors line-clamp-1">
+                                                                        {item.titleName}
+                                                                    </h3>
+                                                                </Link>
+                                                            </div>
+                                                            <p className="text-gray-500 text-sm line-clamp-1 mt-1 font-medium leading-relaxed">
+                                                                {item.description}
+                                                            </p>
                                                         </div>
-                                                        <p className="text-gray-500 text-sm line-clamp-1 mt-1 font-medium leading-relaxed">
-                                                            {item.description}
-                                                        </p>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
-                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="border-2 border-dashed border-gray-200 rounded-[2.5rem] p-20 text-center bg-gray-50/50">
@@ -737,7 +857,122 @@ const Profile = () => {
                                 </motion.div>
                             )}
 
-                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && (
+                            {activeTab === 'security' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="p-8 md:p-12"
+                                >
+                                    <div className="mb-10">
+                                        <h3 className="text-3xl font-bold text-primary mb-2 font-serif">Security Settings</h3>
+                                        <p className="text-muted font-medium">Keep your account safe by updating your password regularly.</p>
+                                    </div>
+
+                                    <div className="">
+                                        <form onSubmit={handlePasswordChange} className="space-y-8">
+                                            {/* Current Password */}
+                                            <div className="group">
+                                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">
+                                                    Current Password
+                                                </label>
+                                                <div className="relative group/input">
+                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                        <FiLock size={18} />
+                                                    </div>
+                                                    <input
+                                                        type={showPasswords.old ? "text" : "password"}
+                                                        value={passwordForm.oldPassword}
+                                                        onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                                                        required
+                                                        placeholder="Enter current password"
+                                                        className="w-full pl-12 pr-12 py-4 bg-white rounded-2xl border-2 border-gray-50 focus:border-orange-500 outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5"
+                                                    />
+                                                    <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPasswords({ ...showPasswords, old: !showPasswords.old })}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-orange-500 transition-colors z-10"
+                                                    >
+                                                        {showPasswords.old ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* New Password Grid */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                <div className="group">
+                                                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">
+                                                        New Password
+                                                    </label>
+                                                    <div className="relative group/input">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                            <FiLock size={18} />
+                                                        </div>
+                                                        <input
+                                                            type={showPasswords.new ? "text" : "password"}
+                                                            value={passwordForm.newPassword}
+                                                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                                            required
+                                                            placeholder="New password"
+                                                            className="w-full pl-12 pr-12 py-4 bg-white rounded-2xl border-2 border-gray-50 focus:border-orange-500 outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5"
+                                                        />
+                                                        <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-orange-500 transition-colors z-10"
+                                                        >
+                                                            {showPasswords.new ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="group">
+                                                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted mb-3 block group-focus-within:text-orange-600 transition-all duration-300">
+                                                        Confirm Password
+                                                    </label>
+                                                    <div className="relative group/input">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within/input:text-orange-500 transition-colors duration-300">
+                                                            <FiLock size={18} />
+                                                        </div>
+                                                        <input
+                                                            type={showPasswords.confirm ? "text" : "password"}
+                                                            value={passwordForm.confirmPassword}
+                                                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                                            required
+                                                            placeholder="Confirm password"
+                                                            className="w-full pl-12 pr-12 py-4 bg-white rounded-2xl border-2 border-gray-50 focus:border-orange-500 outline-none transition-all duration-500 font-semibold text-primary shadow-sm hover:border-gray-200 focus:shadow-[0_0_20px_rgba(249,115,22,0.15)] group-focus-within/input:-translate-y-0.5"
+                                                        />
+                                                        <div className="absolute inset-0 rounded-2xl bg-orange-500/5 opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-orange-500 transition-colors z-10"
+                                                        >
+                                                            {showPasswords.confirm ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={isPasswordLoading}
+                                                className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 font-bold text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-500 shadow-xl shadow-orange-200 hover:shadow-orange-300 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed"
+                                            >
+                                                {isPasswordLoading ? (
+                                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                ) : (
+                                                    <FiSave size={20} />
+                                                )}
+                                                {isPasswordLoading ? 'Updating...' : 'Update Password'}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && activeTab !== 'security' && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}

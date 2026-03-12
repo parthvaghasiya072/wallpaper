@@ -1,11 +1,10 @@
 const Cart = require('../models/CartModel');
 
 // Add item to cart
-export const addToCart = async (req, res) => {
-    try {
+const addToCart = async (req, res) => {
+    try {   
         const { productId, titleName, image, quantity, size, paperMaterial, totalSqFt, price } = req.body;
         const userId = req.user._id;
-
         let cart = await Cart.findOne({ userId });
 
         if (!cart) {
@@ -45,7 +44,7 @@ export const addToCart = async (req, res) => {
 };
 
 // Get user cart
-export const getCart = async (req, res) => {
+const getCart = async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.user._id });
         if (!cart) {
@@ -58,7 +57,7 @@ export const getCart = async (req, res) => {
 };
 
 // Update cart item quantity
-export const updateCartItem = async (req, res) => {
+const updateCartItem = async (req, res) => { 
     try {
         const { cartItemId, quantity } = req.body;
         const cart = await Cart.findOne({ userId: req.user._id });
@@ -82,7 +81,7 @@ export const updateCartItem = async (req, res) => {
 };
 
 // Remove item from cart
-export const removeFromCart = async (req, res) => {
+const removeFromCart = async (req, res) => {
     try {
         const { cartItemId } = req.params;
         const cart = await Cart.findOne({ userId: req.user._id });
@@ -97,4 +96,11 @@ export const removeFromCart = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+module.exports = {
+    addToCart,
+    getCart,
+    updateCartItem,
+    removeFromCart
 };

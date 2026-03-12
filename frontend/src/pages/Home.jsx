@@ -79,13 +79,6 @@ const Home = () => {
         dispatch(getAllProducts());
     }, [dispatch]);
 
-    const trending = [
-        { id: 1, name: "Golden Leaves", price: "$120", image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=400&auto=format&fit=crop" },
-        { id: 2, name: "Ocean Breeze", price: "$95", image: "https://images.unsplash.com/photo-1507646227500-4d389b0012be?q=80&w=400&auto=format&fit=crop" },
-        { id: 3, name: "Muted Mountains", price: "$150", image: "https://images.unsplash.com/photo-1507090960745-b32f65d3113a?q=80&w=400&auto=format&fit=crop" },
-        { id: 4, name: "Marble Texture", price: "$110", image: "https://images.unsplash.com/photo-1628172971217-19ce41f49635?q=80&w=400&auto=format&fit=crop" },
-    ];
-
     return (
         <div className="bg-white min-h-screen font-sans text-gray-900">
             <Header />

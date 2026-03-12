@@ -55,6 +55,21 @@ export const updateUser = createAsyncThunk(
     }
 );
 
+// Change Password
+export const changePassword = createAsyncThunk(
+    "user/changePassword",
+    async ({ id, passwordData }, { rejectWithValue }) => {
+        try {
+            const response = await axios.put(`${API_URL}/changePassword/${id}`, passwordData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Something went wrong");
+        }
+    }
+);
+
 // Delete user
 export const deleteUser = createAsyncThunk(
     "user/deleteUser",

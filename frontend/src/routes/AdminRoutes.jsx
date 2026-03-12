@@ -10,6 +10,7 @@ import HomePage from '../Admin/Pages/HomePage'; // Import HomePage
 import Users from '../Admin/Pages/User';
 import Tags from '../Admin/Pages/Tags';
 import Banner from '../Admin/Pages/Banner';
+import AdminProfile from '../Admin/Pages/AdminProfile';
 
 const AdminRoutes = () => {
     return (
@@ -20,6 +21,7 @@ const AdminRoutes = () => {
                     <Route path="products" element={<Product />} />
                     <Route path="category" element={<Category />} />
                     <Route path="users" element={<Users />} />
+                    <Route path="profile" element={<AdminProfile />} />
                     <Route path="home" element={<HomePage />} /> {/* Restore Home Page */}
                     <Route path="home/hero" element={<HeroSection />} />
                     <Route path="home/tags" element={<Tags />} />

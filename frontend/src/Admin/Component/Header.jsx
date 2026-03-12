@@ -7,11 +7,13 @@ import {
     FiMoon,
     FiSun
 } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 
 const Header = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark, toggleTheme }) => {
-    const { user } = useSelector((state) => state.auth);
+    const { user: authUser } = useSelector((state) => state.auth);
+    const user = authUser?.data || authUser;
 
     return (
         <header className={`h-20 px-6 flex items-center justify-between z-30 shrink-0 transition-all duration-300 border-b ${isDark ? 'bg-[#0f172a]/80 border-slate-800' : 'bg-white/80 border-slate-200 shadow-sm shadow-black/[0.03]'
@@ -42,8 +44,8 @@ const Header = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark, toggleTheme
                 <button
                     onClick={toggleTheme}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${isDark
-                            ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700'
-                            : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50 shadow-sm'
+                        ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700'
+                        : 'bg-white border-slate-200 text-indigo-600 hover:bg-slate-50 shadow-sm'
                         }`}
                 >
                     {isDark ? <FiSun className="text-lg" /> : <FiMoon className="text-lg" />}
@@ -57,7 +59,7 @@ const Header = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark, toggleTheme
 
                 <div className={`h-8 w-px mx-1 ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`} />
 
-                <div className="flex items-center gap-3 pl-2 group cursor-pointer">
+                <Link to="/admin/profile" className="flex items-center gap-3 pl-2 group cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="flex flex-col text-right hidden sm:flex">
                         <span className={`text-sm font-bold leading-tight ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>
                             {user?.firstName} {user?.lastName}
@@ -70,7 +72,7 @@ const Header = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark, toggleTheme
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-xs shadow-lg bg-gradient-to-tr from-indigo-600 to-purple-600`}>
                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                     </div>
-                </div>
+                </Link>
             </div>
         </header>
     );
