@@ -1,14 +1,11 @@
-import React, { useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiCheckCircle, FiPackage, FiArrowRight, FiHome } from 'react-icons/fi';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const OrderSuccess = () => {
-    const [searchParams] = useSearchParams();
-    const sessionId = searchParams.get('session_id');
-
     return (
         <div className="min-h-screen bg-surface font-sans text-primary">
             <Header />
@@ -32,12 +29,11 @@ const OrderSuccess = () => {
                             <FiCheckCircle size={48} />
                         </motion.div>
 
-                        <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tighter text-primary">
-                            Masterpiece Ordered!
+                        <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tighter text-primary text-balance">
+                            Order Successfully Placed!
                         </h1>
                         <p className="text-muted text-lg mb-10 leading-relaxed max-w-md">
-                            Thank you for your acquisition. We are preparing your curated selection with the utmost care.
-                            {sessionId && <span className="block mt-2 font-bold text-sm">Payment Verified Successfully</span>}
+                            Thank you for your acquisition. Your payment has been confirmed, and we're now preparing your curated selection.
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
@@ -46,7 +42,7 @@ const OrderSuccess = () => {
                                 state={{ activeTab: 'orders' }}
                                 className="flex items-center justify-center gap-3 px-8 py-5 bg-primary text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all duration-500 shadow-xl shadow-primary/20"
                             >
-                                <FiPackage size={18} /> View Orders
+                                <FiPackage size={18} /> View My Orders
                             </Link>
                             <Link
                                 to="/"
@@ -57,9 +53,9 @@ const OrderSuccess = () => {
                         </div>
 
                         <div className="mt-12 pt-12 border-t border-secondary w-full">
-                            <p className="text-xs font-black uppercase tracking-widest text-muted mb-4">You might also like</p>
-                            <Link to="/shop" className="inline-flex items-center gap-2 text-orange-500 font-bold hover:gap-4 transition-all">
-                                Continue exploring designs <FiArrowRight />
+                            <p className="text-xs font-black uppercase tracking-widest text-muted mb-4">Discover More</p>
+                            <Link to="/shop" className="inline-flex items-center gap-2 text-orange-500 font-bold hover:gap-4 transition-all group">
+                                Continue exploring designs <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
                     </motion.div>

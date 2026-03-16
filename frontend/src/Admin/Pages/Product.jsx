@@ -39,7 +39,6 @@ const Product = () => {
         const data = new FormData();
         data.append('titleName', values.titleName);
         data.append('description', values.description);
-        data.append('stocks', values.stocks);
         data.append('category', values.category);
         data.append('paperOptions', JSON.stringify(values.paperOptions));
 
@@ -115,14 +114,17 @@ const Product = () => {
         },
         {
             header: "Inventory",
-            accessor: "stocks",
-            render: (item) => (
-                <div className="flex flex-col gap-1 w-24">
-                    <span className={`text-[16px] font-black ${item.stocks < 10 ? 'text-rose-500' : isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                        {String(item.stocks || 0).padStart(2, '0')}
-                    </span>
-                </div>
-            )
+            accessor: "paperOptions",
+            render: (item) => {
+                const totalStock = item.paperOptions?.reduce((acc, opt) => acc + (Number(opt.stocks) || 0), 0) || 0;
+                return (
+                    <div className="flex flex-col gap-1 w-24">
+                        <span className={`text-[16px] font-black ${totalStock < 10 ? 'text-rose-500' : isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                            {String(totalStock).padStart(2, '0')}
+                        </span>
+                    </div>
+                );
+            }
         },
         {
             header: "Price",
@@ -234,7 +236,9 @@ const Product = () => {
                                             <h3 className={` text-lg truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{product.titleName}</h3>
                                             <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
                                                 <span className={`text-lg font-black ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>${product.paperOptions?.length > 0 ? Math.min(...product.paperOptions.map(o => o.pricePerSqFt)) : 0}/ft²</span>
-                                                <span className={`text-xs  ${product.stocks < 10 ? 'text-rose-500' : 'text-emerald-500'}`}>{product.stocks} pcs</span>
+                                                <span className={`text-xs  ${(product.paperOptions?.reduce((acc, opt) => acc + (Number(opt.stocks) || 0), 0) || 0) < 10 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                                    {product.paperOptions?.reduce((acc, opt) => acc + (Number(opt.stocks) || 0), 0) || 0} pcs
+                                                </span>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -256,8 +260,18 @@ const Product = () => {
                 loading={detailLoading}
                 tags={[]}
                 stats={[
-                    { label: 'Inventory', value: `${selectedProduct?.stocks || 0} PCS`, icon: FiBox, color: isDark ? 'text-indigo-400' : 'text-indigo-600' },
-                    { label: 'Status', value: (selectedProduct?.stocks > 0 ? 'In Stock' : 'Out of Stock'), icon: FiActivity, color: selectedProduct?.stocks > 0 ? 'text-emerald-500' : 'text-rose-500' }
+                    {
+                        label: 'Inventory',
+                        value: `${selectedProduct?.paperOptions?.reduce((acc, opt) => acc + (Number(opt.stocks) || 0), 0) || 0} PCS`,
+                        icon: FiBox,
+                        color: isDark ? 'text-indigo-400' : 'text-indigo-600'
+                    },
+                    {
+                        label: 'Status',
+                        value: ((selectedProduct?.paperOptions?.reduce((acc, opt) => acc + (Number(opt.stocks) || 0), 0) || 0) > 0 ? 'In Stock' : 'Out of Stock'),
+                        icon: FiActivity,
+                        color: (selectedProduct?.paperOptions?.reduce((acc, opt) => acc + (Number(opt.stocks) || 0), 0) || 0) > 0 ? 'text-emerald-500' : 'text-rose-500'
+                    }
                 ]}
             >
                 {selectedProduct?.paperOptions?.length > 0 && (
@@ -265,15 +279,15 @@ const Product = () => {
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Material Pricing</h4>
                         <div className="space-y-2">
                             {selectedProduct.paperOptions.map((opt, i) => (
-                                <div
-                                    key={i}
-                                    className={`flex items-center justify-between p-4 rounded-2xl border ${isDark ? 'bg-slate-800/20 border-slate-800' : 'bg-slate-50 border-slate-100'}`}
-                                >
+                                <div className={`flex items-center justify-between p-4 rounded-2xl border ${isDark ? 'bg-slate-800/20 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
                                             <FiPaperclip size={18} />
                                         </div>
-                                        <span className="text-sm font-black">{opt.paperType}</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-black">{opt.paperType}</span>
+                                            <span className={`text-[10px] font-bold ${opt.stocks < 10 ? 'text-rose-500' : 'text-slate-400'}`}>{opt.stocks} in stock</span>
+                                        </div>
                                     </div>
                                     <span className={`text-xl font-black ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
                                         ${opt.pricePerSqFt} <span className="text-[10px] opacity-30">/FT²</span>

@@ -14,13 +14,16 @@ const {
 } = require("../controllers/categoryController");
 
 const {
-    deleteUser
+    deleteUser,
+    getAllUsers
 } = require("../controllers/userController");
 
 const upload = require("../middleware/upload");
 const { createHeroSection, updateHeroSection, deleteHeroSection } = require("../controllers/heroController");
 const { createTag, getTagById, updateTagById, deleteTagById } = require("../controllers/tagController");
 const { createBanner, deleteBannerById, updateBannerById, singleBannerById } = require("../controllers/bannerController");
+const { getAllOrders, getAllConfirmedOrders } = require("../controllers/orderController");
+const { protect } = require("../middleware/authMiddleware"); // Assuming protect is needed and can check for admin but for now just protect
 
 // --- Product Routes ---
 router.post("/createProduct", upload.array("images", 10), createProduct);
@@ -33,6 +36,7 @@ router.put("/updateCategory/:id", upload.single("categoryImage"), updateCategory
 router.delete("/deleteCategory/:id", deleteCategory);
 
 // --- User Routes ---
+router.get("/getAllUsers", protect, getAllUsers);
 router.delete("/deleteUserById/:id", deleteUser);
 
 // Home
@@ -53,5 +57,9 @@ router.post("/createBanner", upload.single("image"), createBanner);
 router.get("/getSingleBanner/:id", singleBannerById);
 router.put("/updateBannerById/:id", upload.single("image"), updateBannerById);
 router.delete("/deleteBannerById/:id", deleteBannerById)
+
+// --- Order Routes ---
+router.get("/getAllOrders", protect, getAllOrders);
+router.get("/getAllConfirmedOrders", protect, getAllConfirmedOrders);
 
 module.exports = router;

@@ -3,12 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye, FiEyeOff, FiLock, FiHash, FiGlobe } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye, FiEyeOff, FiLock, FiHash, FiGlobe, FiShoppingBag, FiSearch, FiArrowRight, FiDownload, FiActivity, FiFilter, FiExternalLink, FiAward, FiArchive, FiZap } from 'react-icons/fi';
 import Header from '../components/Header';
 import toast from 'react-hot-toast';
 import { getUserById, updateUser, changePassword } from '../redux/slices/userSlice';
 import { getAllAddress, createAddress, updateAddressById, deleteAddressById } from '../redux/slices/addressSlice';
 import { getWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
+import { getMyConfirmedOrders } from '../redux/slices/orderSlice';
 import { Link, useLocation } from 'react-router-dom';
 
 // Helper for image URL
@@ -28,6 +29,7 @@ const Profile = () => {
     const { selectedUser, loading, detailLoading } = useSelector((state) => state.user);
     const { addresses, loading: addressLoading } = useSelector((state) => state.address);
     const { items: wishlistItems, loading: wishlistLoading } = useSelector((state) => state.wishlist || {});
+    const { confirmedOrders, loading: orderLoading } = useSelector((state) => state.order || {});
     const location = useLocation();
     const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'personal');
     const [isEditing, setIsEditing] = useState(false);
@@ -75,6 +77,9 @@ const Profile = () => {
         }
         if (activeTab === 'wishlist' && userId) {
             dispatch(getWishlist());
+        }
+        if (activeTab === 'orders' && userId) {
+            dispatch(getMyConfirmedOrders());
         }
     }, [dispatch, activeTab, authUser]);
 
@@ -972,7 +977,128 @@ const Profile = () => {
                                 </motion.div>
                             )}
 
-                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && activeTab !== 'security' && (
+                            {activeTab === 'orders' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="p-8 md:p-12"
+                                >
+                                    <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                                        <div>
+                                            <h3 className="text-4xl font-bold text-primary mb-3 font-serif italic tracking-tight">Order History</h3>
+                                            <p className="text-muted font-medium max-w-sm leading-relaxed">A curated log of your acquired masterpieces and artistic collection.</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 px-6 py-3 bg-orange-50 rounded-2xl border border-orange-100">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-200">
+                                                <FiPackage size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-orange-600/50">Total Orders</p>
+                                                <p className="text-lg font-black text-primary leading-none">{confirmedOrders?.length || 0}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {orderLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                                            <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-600/40">Synchronizing Vault...</p>
+                                        </div>
+                                    ) : confirmedOrders?.length > 0 ? (
+                                        <div className="space-y-8 max-h-[700px] overflow-y-auto pr-4 custom-scrollbar">
+                                            {confirmedOrders.map((order) => (
+                                                <div key={order._id} className="group relative bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(249,115,22,0.1)] transition-all duration-500">
+                                                    {/* Status Banner */}
+                                                    <div className="absolute top-0 right-0 p-8">
+                                                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${order.paymentStatus === 'Completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${order.paymentStatus === 'Completed' ? 'bg-emerald-500 animate-pulse' : 'bg-orange-500'}`} />
+                                                            {order.paymentStatus}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="p-8 md:p-10">
+                                                        {/* Header Info */}
+                                                        <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-10 pb-10 border-b border-gray-50">
+                                                            <div>
+                                                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted mb-2">Reference ID</p>
+                                                                <h4 className="text-xl font-bold text-primary tracking-tighter">#{order._id.slice(-8).toUpperCase()}</h4>
+                                                            </div>
+                                                            <div className="h-10 w-px bg-gray-100 hidden sm:block" />
+                                                            <div>
+                                                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted mb-2">Acquisition Date</p>
+                                                                <p className="text-sm font-bold text-primary">
+                                                                    {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                                </p>
+                                                            </div>
+                                                            <div className="h-10 w-px bg-gray-100 hidden sm:block" />
+                                                            <div className="flex-1 text-right">
+                                                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-600/50 mb-2">Investment</p>
+                                                                <p className="text-3xl font-black text-orange-600 tracking-tighter">₹{order.totalAmount}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Items Portfolio */}
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                                                            {order.items.map((item, idx) => (
+                                                                <div key={idx} className="group/item relative flex gap-5 p-4 rounded-3xl bg-gray-50/30 border border-gray-50 hover:bg-white hover:border-orange-200 transition-all duration-300">
+                                                                    <div className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-sm shadow-gray-200 group-hover/item:scale-105 transition-transform duration-500">
+                                                                        <img src={item.image?.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} className="w-full h-full object-cover" alt="" />
+                                                                    </div>
+                                                                    <div className="flex-1 py-1">
+                                                                        <h5 className="font-bold text-primary text-sm line-clamp-1 group-hover/item:text-orange-600 transition-colors uppercase tracking-tight">{item.titleName}</h5>
+                                                                        <p className="text-[10px] font-black text-muted uppercase mt-2 tracking-widest">{item.paperMaterial?.paperType} • x{item.quantity}</p>
+                                                                        <div className="mt-3 flex items-center justify-between">
+                                                                            <span className="text-xs font-black text-orange-500">₹{item.price}</span>
+                                                                            <Link to={`/product-details/${item._id}`} className="text-[9px] font-black uppercase tracking-widest text-primary opacity-0 group-hover/item:opacity-100 transition-opacity">Show Piece</Link>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Bottom Meta */}
+                                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-orange-50/30 rounded-3xl border border-orange-100/50">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-orange-500 shadow-sm border border-orange-100">
+                                                                    <FiMapPin size={20} />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600/50 mb-1">Destination</p>
+                                                                    <p className="text-[11px] font-bold text-primary leading-tight">{order.shippingAddress?.fullName}, {order.shippingAddress?.city}</p>
+                                                                </div>
+                                                            </div>
+                                                            <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:text-orange-600 transition-colors p-2 group/btn">
+                                                                Download Receipt
+                                                                <FiSave className="group-hover/btn:translate-y-0.5 transition-transform" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="border-4 border-double border-gray-100 rounded-[3rem] p-24 text-center bg-gray-50/30">
+                                            <motion.div
+                                                initial={{ scale: 0.9, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                className="w-24 h-24 bg-white rounded-[2rem] shadow-2xl shadow-gray-200 flex items-center justify-center mx-auto mb-10 text-orange-400 rotate-12"
+                                            >
+                                                <FiShoppingBag size={40} />
+                                            </motion.div>
+                                            <h4 className="text-3xl font-serif font-black text-primary mb-4 italic tracking-tight">Your Portfolio is Vacant</h4>
+                                            <p className="text-muted mb-10 max-w-sm mx-auto font-medium leading-relaxed">It seems you haven't acquired any masterpieces for your collection yet. Our gallery awaits your discovery.</p>
+                                            <Link
+                                                to="/shop"
+                                                className="inline-flex px-10 py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs items-center gap-3 hover:bg-orange-600 hover:shadow-2xl hover:shadow-orange-200 transition-all active:scale-95"
+                                            >
+                                                Explore the Gallery
+                                            </Link>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && activeTab !== 'security' && activeTab !== 'orders' && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}

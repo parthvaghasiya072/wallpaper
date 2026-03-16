@@ -26,12 +26,15 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Routes
 app.use('/api/user', require('./routes/User.route.js'));
 app.use('/api/admin', require('./routes/Admin.route.js'));
-app.use('/api/order', require('./routes/Order.route.js'));
 app.use('/api', require('./routes/Index.route.js'));
 
-// Default Route
-app.get('/', (req, res) => {
-    res.send('Wallpaper App API is running...');
+// 404 Handler for undefined routes
+app.use((req, res) => {
+    console.log(`404 - ${req.method} ${req.url}`);
+    res.status(404).json({
+        success: false,
+        message: `Route ${req.method} ${req.url} not found`
+    });
 });
 
 // Error Handling Middleware

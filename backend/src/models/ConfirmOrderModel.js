@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
+const confirmOrderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -45,13 +45,11 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['COD', 'Stripe', 'UPI', 'Netbanking'],
         required: true
     },
     paymentStatus: {
         type: String,
-        enum: ['Pending', 'Completed', 'Failed', 'Refunded'],
-        default: 'Pending'
+        default: 'Completed'
     },
     totalAmount: {
         type: Number,
@@ -59,7 +57,6 @@ const orderSchema = new mongoose.Schema({
     },
     orderStatus: {
         type: String,
-        enum: ['Processing', 'Shipped', 'Delivered', 'Cancelled'],
         default: 'Processing'
     },
     stripePaymentId: {
@@ -67,7 +64,11 @@ const orderSchema = new mongoose.Schema({
     },
     paymentDetails: {
         type: mongoose.Schema.Types.Mixed
+    },
+    originalOrderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order'
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model('ConfirmOrder', confirmOrderSchema);

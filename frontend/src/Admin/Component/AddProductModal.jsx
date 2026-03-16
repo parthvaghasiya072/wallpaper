@@ -17,9 +17,6 @@ const validationSchema = Yup.object().shape({
         .min(3, 'Title too short'),
     category: Yup.string()
         .required('Category is required'),
-    stocks: Yup.number()
-        .required('Stock units required')
-        .min(0, 'Cannot be negative'),
     description: Yup.string()
         .required('Description is required')
         .min(10, 'Description too short'),
@@ -39,7 +36,8 @@ const validationSchema = Yup.object().shape({
     paperOptions: Yup.array().of(
         Yup.object().shape({
             paperType: Yup.string().required('Type is required'),
-            pricePerSqFt: Yup.number().required('Rate is required').min(0, 'Cannot be negative')
+            pricePerSqFt: Yup.number().required('Rate is required').min(0, 'Cannot be negative'),
+            stocks: Yup.number().required('Stock units required').min(0, 'Cannot be negative'),
         })
     )
 });
@@ -72,17 +70,21 @@ const AddProductModal = ({
     const initialValues = editData ? {
         titleName: editData.titleName,
         description: editData.description,
-        stocks: editData.stocks,
         category: editData.category,
         images: editData.images?.length > 0 ? editData.images : [null],
-        paperOptions: editData.paperOptions || [{ paperType: '', pricePerSqFt: '' }]
+        paperOptions: editData.paperOptions?.length > 0
+            ? editData.paperOptions.map(opt => ({
+                paperType: opt.paperType || '',
+                pricePerSqFt: opt.pricePerSqFt || '',
+                stocks: opt.stocks || ''
+            }))
+            : [{ paperType: '', pricePerSqFt: '', stocks: '' }]
     } : {
         titleName: '',
         description: '',
-        stocks: '',
         category: '',
         images: [null],
-        paperOptions: [{ paperType: '', pricePerSqFt: '' }]
+        paperOptions: [{ paperType: '', pricePerSqFt: '', stocks: '' }]
     };
 
     return (
@@ -155,7 +157,7 @@ const AddProductModal = ({
                                                                     } ${isDropdownOpen ? '' : ''}`}
                                                             >
                                                                 <div className="flex items-center gap-2 overflow-hidden">
-                                                                    <FiLayers className="text-slate-400"/>
+                                                                    <FiLayers className="text-slate-400" />
                                                                     <span className={`text-sm font-bold truncate max-w-[120px] ${values.category ? (isDark ? 'text-white' : 'text-slate-900') : 'text-slate-400'}`}>
                                                                         {values.category || 'Category'}
                                                                     </span>
@@ -198,14 +200,6 @@ const AddProductModal = ({
                                                             </AnimatePresence>
                                                         </div>
                                                         <ErrorMessage name="category" component={ErrorText} />
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Units</label>
-                                                        <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl border ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                                                            <FiBox className="text-slate-400" />
-                                                            <Field name="stocks" type="number" placeholder="00" className="bg-transparent border-none outline-none text-sm w-full font-bold" />
-                                                        </div>
-                                                        <ErrorMessage name="stocks" component={ErrorText} />
                                                     </div>
                                                 </div>
 
@@ -290,25 +284,31 @@ const AddProductModal = ({
                                                             <>
                                                                 <div className="flex items-center justify-between">
                                                                     <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Material Hierarchy</label>
-                                                                    <button type="button" onClick={() => push({ paperType: '', pricePerSqFt: '' })} className="text-[9px] font-black underline text-indigo-500 uppercase tracking-widest transition-all hover:text-indigo-400 flex items-center gap-1">
+                                                                    <button type="button" onClick={() => push({ paperType: '', pricePerSqFt: '', stocks: '' })} className="text-[9px] font-black underline text-indigo-500 uppercase tracking-widest transition-all hover:text-indigo-400 flex items-center gap-1">
                                                                         <FiPlus size={10} /> Add Material
                                                                     </button>
                                                                 </div>
                                                                 <div className="space-y-3">
                                                                     {values.paperOptions.map((_, index) => (
-                                                                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key={index} className="flex items-center gap-3">
-                                                                            <div className={`flex-1 grid grid-cols-2 gap-3 px-5 py-4 rounded-2xl border ${isDark ? 'bg-slate-900/40 border-slate-700' : 'bg-slate-50 border-slate-200 shadow-sm'}`}>
-                                                                                <Field name={`paperOptions.${index}.paperType`} placeholder="Type (e.g. Matte)" className="bg-transparent border-none outline-none text-xs font-black flex-1" />
-                                                                                <div className="flex items-center gap-1 border-l border-slate-500/20 pl-3">
+                                                                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key={index} className="flex flex-col gap-3">
+                                                                            <div className={`flex items-center gap-3 px-5 py-4 rounded-2xl border ${isDark ? 'bg-slate-900/40 border-slate-700' : 'bg-slate-50 border-slate-200 shadow-sm'}`}>
+                                                                                <div className="flex-[2]">
+                                                                                    <Field name={`paperOptions.${index}.paperType`} placeholder="Type (e.g. Matte)" className="bg-transparent border-none outline-none text-xs font-black w-full" />
+                                                                                </div>
+                                                                                <div className="flex-1 flex items-center gap-1 border-l border-slate-500/20 pl-3">
                                                                                     <FiDollarSign size={12} className="text-indigo-500" />
                                                                                     <Field name={`paperOptions.${index}.pricePerSqFt`} type="number" placeholder="Rate" className="bg-transparent border-none outline-none text-xs font-black w-full" />
                                                                                 </div>
+                                                                                <div className="flex-1 flex items-center gap-1 border-l border-slate-500/20 pl-3">
+                                                                                    <FiBox size={12} className="text-orange-500" />
+                                                                                    <Field name={`paperOptions.${index}.stocks`} type="number" placeholder="Stock" className="bg-transparent border-none outline-none text-xs font-black w-full" />
+                                                                                </div>
+                                                                                {values.paperOptions.length > 1 && (
+                                                                                    <button type="button" onClick={() => remove(index)} className="p-3 text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all">
+                                                                                        <FiTrash2 size={18} />
+                                                                                    </button>
+                                                                                )}
                                                                             </div>
-                                                                            {values.paperOptions.length > 1 && (
-                                                                                <button type="button" onClick={() => remove(index)} className="p-4 text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all">
-                                                                                    <FiTrash2 size={18} />
-                                                                                </button>
-                                                                            )}
                                                                         </motion.div>
                                                                     ))}
                                                                 </div>

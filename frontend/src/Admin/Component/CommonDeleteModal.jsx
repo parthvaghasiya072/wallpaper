@@ -46,7 +46,7 @@ const CommonDeleteModal = ({
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         onClick={(e) => e.stopPropagation()}
-                        className={`relative w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl overflow-hidden ${isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}
+                        className={`relative w-full max-w-sm rounded-lg p-8 text-center shadow-2xl overflow-hidden ${isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}
                     >
                         {/* Top colour stripe */}
                         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-500 to-orange-500" />

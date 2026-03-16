@@ -9,27 +9,83 @@ export const createOrder = createAsyncThunk(
     async (orderData, { getState, rejectWithValue }) => {
         try {
             const { token } = getState().auth;
-            const response = await axios.post(`${API_URL}/order/createOrder`, orderData, {
+            const response = await axios.post(`${API_URL}/user/create-order`, orderData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Order creation failed");
+            const url = `${API_URL}/user/create-order`;
+            console.error(`Axios createOrder error at ${url}:`, error);
+            const message = error.response?.data?.message || `404: Route not found at ${url}`;
+            return rejectWithValue(message);
         }
     }
 );
 
-export const createStripeSession = createAsyncThunk(
-    "order/createStripeSession",
-    async ({ items, orderId }, { getState, rejectWithValue }) => {
+export const createPaymentIntent = createAsyncThunk(
+    "order/createPaymentIntent",
+    async ({ orderId }, { getState, rejectWithValue }) => {
         try {
             const { token } = getState().auth;
-            const response = await axios.post(`${API_URL}/order/create-checkout-session`, { items, orderId }, {
+            const response = await axios.post(`${API_URL}/user/create-payment-intent`, { orderId }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Payment session failed");
+            console.error("Axios createPaymentIntent error:", error);
+            const message = error.response?.data?.message || error.message || "Payment intent failed";
+            return rejectWithValue(message);
+        }
+    }
+);
+
+export const updatePaymentStatus = createAsyncThunk(
+    "order/updatePaymentStatus",
+    async (paymentData, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.post(`${API_URL}/user/update-payment-status`, paymentData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Axios updatePaymentStatus error:", error);
+            const message = error.response?.data?.message || error.message || "Payment update failed";
+            return rejectWithValue(message);
+        }
+    }
+);
+
+export const getMyOrders = createAsyncThunk(
+    "order/getMyOrders",
+    async (_, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.get(`${API_URL}/user/my-orders`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Axios getMyOrders error:", error);
+            const message = error.response?.data?.message || error.message || "Failed to fetch orders";
+            return rejectWithValue(message);
+        }
+    }
+);
+
+export const getMyConfirmedOrders = createAsyncThunk(
+    "order/getMyConfirmedOrders",
+    async (_, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.get(`${API_URL}/user/my-confirmed-orders`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Axios getMyConfirmedOrders error:", error);
+            const message = error.response?.data?.message || error.message || "Failed to fetch confirmed orders";
+            return rejectWithValue(message);
         }
     }
 );
@@ -37,6 +93,7 @@ export const createStripeSession = createAsyncThunk(
 const initialState = {
     currentOrder: null,
     orders: [],
+    confirmedOrders: [],
     loading: false,
     error: null
 };
@@ -66,16 +123,49 @@ const orderSlice = createSlice({
                 state.error = action.payload;
                 toast.error(action.payload);
             })
-            .addCase(createStripeSession.pending, (state) => {
+            .addCase(createPaymentIntent.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(createStripeSession.fulfilled, (state) => {
+            .addCase(createPaymentIntent.fulfilled, (state) => {
                 state.loading = false;
             })
-            .addCase(createStripeSession.rejected, (state, action) => {
+            .addCase(createPaymentIntent.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
                 toast.error(action.payload);
+            })
+            .addCase(updatePaymentStatus.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(updatePaymentStatus.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(updatePaymentStatus.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                toast.error(action.payload);
+            })
+            .addCase(getMyOrders.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(getMyOrders.fulfilled, (state, action) => {
+                state.loading = false;
+                state.orders = action.payload.orders;
+            })
+            .addCase(getMyOrders.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(getMyConfirmedOrders.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(getMyConfirmedOrders.fulfilled, (state, action) => {
+                state.loading = false;
+                state.confirmedOrders = action.payload.orders;
+            })
+            .addCase(getMyConfirmedOrders.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     }
 });

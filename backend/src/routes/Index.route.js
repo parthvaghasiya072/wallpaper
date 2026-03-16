@@ -10,6 +10,10 @@ const { protect } = require("../middleware/authMiddleware");
 const { getHeroSections } = require("../controllers/heroController");
 const { getAllTags } = require("../controllers/tagController");
 const { getAllBanners } = require("../controllers/bannerController");
+const { createOrder, createPaymentIntent, updatePaymentStatus } = require("../controllers/orderController");
+
+// Health Check
+router.get("/ping", (req, res) => res.json({ success: true, message: "Server is UPDATED", time: new Date() }));
 
 // product
 router.get("/getAllProducts", getAllProducts);
@@ -33,5 +37,9 @@ router.get("/getAllTags", getAllTags);
 
 //Banner
 router.get("/getAllBanners", getAllBanners);
+
+// Orders (Directly in Index for better priority)
+router.post("/user/create-order", protect, createOrder);
+router.post("/user/create-payment-intent", protect, createPaymentIntent);
 
 module.exports = router;

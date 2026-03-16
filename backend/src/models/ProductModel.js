@@ -9,10 +9,6 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    stocks: {
-        type: Number,
-        required: true
-    },
     category: {
         type: String,
         required: true
@@ -29,7 +25,11 @@ const productSchema = new mongoose.Schema({
         pricePerSqFt: {
             type: Number,
             required: true
-        }
+        },
+        stocks: {
+            type: Number,
+            required: true
+        },
     }]
 }, {
     timestamps: true

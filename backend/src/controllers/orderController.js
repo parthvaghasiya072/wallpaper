@@ -1,5 +1,7 @@
 const Order = require('../models/OrderModel');
 const Cart = require('../models/CartModel');
+const Product = require('../models/ProductModel');
+const ConfirmOrder = require('../models/ConfirmOrderModel');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Create a new order
@@ -18,52 +20,113 @@ const createOrder = async (req, res) => {
             shippingAddress,
             paymentMethod,
             totalAmount,
-            paymentStatus: paymentMethod === 'COD' ? 'Pending' : 'Pending'
+            paymentStatus: 'Pending'
         });
 
         await order.save();
 
-        // If order successful, clear cart
-        await Cart.findOneAndDelete({ userId });
+        // If COD, we can clear cart immediately. For other methods, wait for success.
+        if (paymentMethod === 'COD') {
+            await Cart.findOneAndDelete({ userId });
+        }
 
         res.status(201).json({ success: true, order });
     } catch (error) {
+        console.error("Order Creation Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Create Stripe Checkout Session
-const createCheckoutSession = async (req, res) => {
+// Create Stripe Payment Intent (Securely)
+const createPaymentIntent = async (req, res) => {
     try {
-        const { items, orderId } = req.body;
+        const { orderId } = req.body;
 
-        const line_items = items.map(item => ({
-            price_data: {
-                currency: 'inr',
-                product_data: {
-                    name: item.titleName,
-                    images: [item.image.startsWith('http') ? item.image : `${process.env.API_URL}/uploads/${item.image}`],
-                },
-                unit_amount: Math.round(item.price * 100 / item.quantity), // Stripe expects amount in cents/paise
+        // 1. Fetch order from DB to ensure amount is correct (Security Best Practice)
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        // 2. Create Payment Intent
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(order.totalAmount * 100), // convert to paise
+            currency: 'inr',
+            description: `Payment for Order #${orderId}`,
+            metadata: {
+                orderId: orderId.toString(),
+                userId: req.user._id.toString()
             },
-            quantity: item.quantity,
-        }));
-
-        const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items,
-            mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.FRONTEND_URL}/checkout`,
-            metadata: { orderId: orderId.toString() }
         });
 
-        // Update order with session ID
-        await Order.findByIdAndUpdate(orderId, { stripeSessionId: session.id });
-
-        res.status(200).json({ success: true, id: session.id, url: session.url });
+        res.status(200).json({
+            success: true,
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id
+        });
     } catch (error) {
-        console.error("Stripe Error:", error);
+        console.error("Stripe Intent Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Update Payment Status (for Stripe/UPI/COD)
+const updatePaymentStatus = async (req, res) => {
+    try {
+        const { orderId, paymentStatus, stripePaymentId } = req.body;
+        const userId = req.user._id;
+
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        order.paymentStatus = paymentStatus;
+        if (stripePaymentId) order.stripePaymentId = stripePaymentId;
+
+        if (paymentStatus === 'Completed') {
+            // 1. Reduce Stock
+            for (const item of order.items) {
+                await Product.findOneAndUpdate(
+                    {
+                        _id: item.productId,
+                        "paperOptions.paperType": item.paperMaterial.paperType
+                    },
+                    {
+                        $inc: { "paperOptions.$.stocks": -item.quantity }
+                    }
+                );
+            }
+
+            // 2. Move to ConfirmOrder Section
+            const confirmedOrder = new ConfirmOrder({
+                ...order.toObject(),
+                originalOrderId: order._id,
+                paymentStatus: 'Completed'
+            });
+            // Remove the _id from the object to let Mongoose generate a new one if needed, 
+            // but the user wants it "IN CONFIRMORDER SECTION NOT IN ORDER SECTION".
+            // Actually, we can keep the same data.
+            delete confirmedOrder._id;
+
+            await confirmedOrder.save();
+
+            // 3. Delete from Order section
+            await Order.findByIdAndDelete(orderId);
+
+            // 4. Clear Cart
+            await Cart.findOneAndDelete({ userId });
+
+            return res.status(200).json({ success: true, message: "Order confirmed and stock reduced", order: confirmedOrder });
+        }
+
+        await order.save();
+        res.status(200).json({ success: true, order });
+    } catch (error) {
+        console.error("Update Payment Status Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -78,8 +141,42 @@ const getUserOrders = async (req, res) => {
     }
 };
 
+// Get all orders (Admin)
+const getAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.find().populate('userId', 'fullName email').sort({ createdAt: -1 });
+        res.status(200).json({ success: true, orders });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get all confirmed orders (Admin)
+const getAllConfirmedOrders = async (req, res) => {
+    try {
+        const orders = await ConfirmOrder.find().populate('userId', 'fullName email').sort({ createdAt: -1 });
+        res.status(200).json({ success: true, orders });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get user confirmed orders
+const getUserConfirmedOrders = async (req, res) => {
+    try {
+        const orders = await ConfirmOrder.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        res.status(200).json({ success: true, orders });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     createOrder,
-    createCheckoutSession,
-    getUserOrders
+    createPaymentIntent,
+    updatePaymentStatus,
+    getUserOrders,
+    getAllOrders,
+    getAllConfirmedOrders,
+    getUserConfirmedOrders
 };

@@ -2,15 +2,11 @@ const Product = require("../models/ProductModel");
 
 const createProduct = async (req, res) => {
     try {
-        const { titleName, description, stocks, category, paperOptions } = req.body;
+        const { titleName, description, category, paperOptions } = req.body;
 
         // More robust validation
         if (!titleName || !description || category === undefined || paperOptions === undefined) {
             return res.status(400).json({ message: "Mandatory fields (Title, Description, Category, Paper Options) are missing" });
-        }
-
-        if (stocks === undefined || stocks === null || stocks === "") {
-            return res.status(400).json({ message: "Stock field is required" });
         }
 
         // Handle images
@@ -29,10 +25,18 @@ const createProduct = async (req, res) => {
             }
         }
 
+        // Ensure stocks and rates are numbers
+        if (Array.isArray(parsedPaperOptions)) {
+            parsedPaperOptions = parsedPaperOptions.map(opt => ({
+                ...opt,
+                stocks: Number(opt.stocks),
+                pricePerSqFt: Number(opt.pricePerSqFt)
+            }));
+        }
+
         const product = await Product.create({
             titleName,
             description,
-            stocks: Number(stocks),
             category,
             images: imagePaths,
             paperOptions: parsedPaperOptions
@@ -40,6 +44,7 @@ const createProduct = async (req, res) => {
 
         res.status(201).json(product);
     } catch (error) {
+        console.error("Create Product Error:", error);
         res.status(500).json({ message: error.message });
     }
 }
@@ -122,15 +127,17 @@ const deleteProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const { titleName, description, stocks, category, paperOptions } = req.body;
+        const { titleName, description, category, paperOptions } = req.body;
         const productId = req.params.id;
 
-        const updateData = {
-            titleName,
-            description,
-            stocks: Number(stocks),
-            category,
+        if (!productId) {
+            return res.status(400).json({ message: "Product ID is required" });
         }
+
+        const updateData = {};
+        if (titleName) updateData.titleName = titleName;
+        if (description) updateData.description = description;
+        if (category) updateData.category = category;
 
         // Handle images (Preserve existing + add new)
         let images = [];
@@ -138,6 +145,7 @@ const updateProduct = async (req, res) => {
             try {
                 images = JSON.parse(req.body.existingImages);
             } catch (e) {
+                console.error("Error parsing existingImages:", e);
                 images = [];
             }
         }
@@ -151,25 +159,41 @@ const updateProduct = async (req, res) => {
             updateData.images = images;
         }
 
-        if (typeof paperOptions === 'string') {
-            try {
-                updateData.paperOptions = JSON.parse(paperOptions)
-            } catch (e) {
-                return res.status(400).json({ message: "Invalid paper options format" })
+        // Handle paperOptions
+        if (paperOptions !== undefined) {
+            let parsedPaperOptions = paperOptions;
+            if (typeof paperOptions === 'string') {
+                try {
+                    parsedPaperOptions = JSON.parse(paperOptions);
+                } catch (e) {
+                    return res.status(400).json({ message: "Invalid paper options format" });
+                }
             }
-        } else {
-            updateData.paperOptions = paperOptions
+
+            // Ensure stocks are numbers
+            if (Array.isArray(parsedPaperOptions)) {
+                updateData.paperOptions = parsedPaperOptions.map(opt => ({
+                    ...opt,
+                    stocks: Number(opt.stocks),
+                    pricePerSqFt: Number(opt.pricePerSqFt)
+                }));
+            }
         }
 
-        const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true })
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
 
         if (!updatedProduct) {
-            return res.status(404).json({ message: "Product not found" })
+            return res.status(404).json({ message: "Product not found" });
         }
 
-        res.status(200).json(updatedProduct)
+        res.status(200).json(updatedProduct);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        console.error("Update Product Error:", error);
+        res.status(500).json({ message: error.message });
     }
 }
 

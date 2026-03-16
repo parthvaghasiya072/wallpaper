@@ -420,9 +420,9 @@ const ProductDetails = () => {
                                     </div>
                                     <div className="text-right">
                                         <div className={`flex items-center justify-end gap-2 mb-1`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${selectedProduct.stocks > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
                                             <span className="text-[9px] font-black uppercase tracking-widest opacity-60">
-                                                {selectedProduct.stocks} Available
+                                                {selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks || 0} Available
                                             </span>
                                         </div>
                                     </div>

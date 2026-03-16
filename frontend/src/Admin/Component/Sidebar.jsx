@@ -9,7 +9,8 @@ import {
     FiSettings,
     FiLogOut,
     FiActivity,
-    FiPackage
+    FiPackage,
+    FiCheckCircle
 } from 'react-icons/fi';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
@@ -24,6 +25,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark }) => {
         { icon: FiImage, label: 'Products', path: '/admin/products' },
         { icon: FiGrid, label: 'Categories', path: '/admin/category' },
         { icon: FiUsers, label: 'Users', path: '/admin/users' },
+        { icon: FiCheckCircle, label: 'Confirmed Orders', path: '/admin/confirmed-orders' },
         { icon: FiActivity, label: 'Sales', path: '/admin/sales' },
         {
             icon: FiSettings,
