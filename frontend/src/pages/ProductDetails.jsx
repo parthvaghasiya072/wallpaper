@@ -303,7 +303,7 @@ const ProductDetails = () => {
                                 >
                                     {selectedProduct.paperOptions?.map((opt, idx) => (
                                         <option key={idx} value={idx} className="bg-white text-primary uppercase">
-                                            {opt.paperType} — ₹{opt.pricePerSqFt}
+                                            {opt.paperType} — ₹{opt.pricePerSqFt} {opt.stocks <= 0 ? '(OUT OF STOCK)' : ''}
                                         </option>
                                     ))}
                                 </select>
@@ -421,20 +421,25 @@ const ProductDetails = () => {
                                     <div className="text-right">
                                         <div className={`flex items-center justify-end gap-2 mb-1`}>
                                             <div className={`w-1.5 h-1.5 rounded-full ${selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">
-                                                {selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks || 0} Available
+                                            <span className={`text-[9px] font-black uppercase tracking-widest ${selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks > 0 ? 'opacity-60' : 'text-red-500 opacity-100'}`}>
+                                                {selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks > 0
+                                                    ? `${selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks} Available`
+                                                    : 'Out of Stock'}
                                             </span>
                                         </div>
+                                        {selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks <= 0 && (
+                                            <p className="text-[10px] font-black text-red-600 uppercase tracking-tighter animate-pulse">Material Unavailable</p>
+                                        )}
                                     </div>
                                 </div>
 
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={cartLoading}
-                                    className="w-full py-5 bg-orange-500 hover:bg-black text-white rounded-lg font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-orange-600/30 flex items-center justify-center gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={cartLoading || selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks <= 0}
+                                    className={`w-full py-5 rounded-lg font-black uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center justify-center gap-4 group disabled:opacity-50 disabled:cursor-not-allowed ${selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks > 0 ? 'bg-orange-500 hover:bg-black text-white shadow-orange-600/30' : 'bg-gray-200 text-gray-500 shadow-none'}`}
                                 >
                                     <FiShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-                                    {cartLoading ? 'Adding to Gallery...' : 'Add to Collection'}
+                                    {cartLoading ? 'Adding to Gallery...' : selectedProduct.paperOptions?.[selectedPaperIdx]?.stocks > 0 ? 'Add to Collection' : 'Out of Stock'}
                                 </button>
                             </div>
                         </section>

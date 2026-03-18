@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -72,9 +73,107 @@ const loginUser = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}
+};
+
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    // Check for email credentials
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error("CRITICAL: Email credentials missing in .env file (EMAIL_USER/EMAIL_PASS)");
+        return res.status(500).json({
+            message: "Server email configuration incomplete. Please contact support or check server logs."
+        });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetPasswordOTP = otp;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save();
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Password Reset OTP - Lumiere Art Store",
+            text: `Your OTP for password reset is: ${otp}. This OTP will expire in 10 minutes.`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+                return res.status(500).json({ message: "Error sending OTP via email" });
+            }
+            res.status(200).json({ message: "OTP sent to your email" });
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const verifyOTP = async (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        const user = await User.findOne({
+            email,
+            resetPasswordOTP: otp,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+        }
+
+        res.status(200).json({
+            message: "OTP verified proceed to reset password",
+            userId: user._id
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { userId, newPassword } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user || !user.resetPasswordOTP) {
+            return res.status(400).json({ message: "OTP verification failed or session expired" });
+        }
+
+        const pass = await bcrypt.hash(newPassword, 10);
+        user.password = pass;
+        user.resetPasswordOTP = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 module.exports = {
     createUser,
-    loginUser
+    loginUser,
+    forgotPassword,
+    verifyOTP,
+    resetPassword
 };

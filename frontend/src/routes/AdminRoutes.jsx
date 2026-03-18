@@ -12,6 +12,7 @@ import Tags from '../Admin/Pages/Tags';
 import Banner from '../Admin/Pages/Banner';
 import AdminProfile from '../Admin/Pages/AdminProfile';
 import ConfirmedOrders from '../Admin/Pages/ConfirmedOrders';
+import Sales from '../Admin/Pages/Sales';
 
 const AdminRoutes = () => {
     return (
@@ -24,6 +25,7 @@ const AdminRoutes = () => {
                     <Route path="users" element={<Users />} />
                     <Route path="profile" element={<AdminProfile />} />
                     <Route path="confirmed-orders" element={<ConfirmedOrders />} />
+                    <Route path="sales" element={<Sales />} />
                     <Route path="home" element={<HomePage />} /> {/* Restore Home Page */}
                     <Route path="home/hero" element={<HeroSection />} />
                     <Route path="home/tags" element={<Tags />} />

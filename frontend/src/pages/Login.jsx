@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiCheck } from 'react-icons/fi';
+import { loginUser, registerUser, forgotPassword, verifyOTP, resetPassword } from '../redux/slices/authSlice';
+import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiCheck, FiSend, FiShield, FiKey, FiX } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import toast, { Toaster } from 'react-hot-toast';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginUser, registerUser } from '../redux/slices/authSlice';
 
 const AnimatedInput = ({ icon: Icon, type, placeholder, value, onChange, name }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -56,11 +56,18 @@ const Login = () => {
     const { isLoading, user } = useSelector((state) => state.auth);
 
     const [isLogin, setIsLogin] = useState(true);
+    const [rememberMe, setRememberMe] = useState(!!localStorage.getItem('rememberedEmail'));
+    const [showForgot, setShowForgot] = useState(false);
+    const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: OTP, 3: Reset
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [resetUserId, setResetUserId] = useState(null);
+    const [resetPasswords, setResetPasswords] = useState({ password: '', confirm: '' });
 
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        email: '',
+        email: localStorage.getItem('rememberedEmail') || '',
         password: '',
         confirmPassword: '',
     });
@@ -83,6 +90,13 @@ const Login = () => {
 
         if (isLogin) {
             if (!email || !password) return toast.error('Please fill in all fields');
+
+            if (rememberMe) {
+                localStorage.setItem('rememberedEmail', email);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
+
             dispatch(loginUser({ email, password }));
         } else {
             if (!firstName || !lastName || !email || !password || !confirmPassword) return toast.error('Please fill in all fields');
@@ -91,6 +105,34 @@ const Login = () => {
 
             const result = await dispatch(registerUser({ firstName, lastName, email, password }));
             if (registerUser.fulfilled.match(result)) setIsLogin(true);
+        }
+    };
+
+    const handleForgotSubmit = async (e) => {
+        e.preventDefault();
+        if (forgotStep === 1) {
+            if (!forgotEmail) return toast.error("Please enter your email");
+            const result = await dispatch(forgotPassword(forgotEmail));
+            if (forgotPassword.fulfilled.match(result)) setForgotStep(2);
+        } else if (forgotStep === 2) {
+            if (otp.length !== 6) return toast.error("Please enter valid 6-digit OTP");
+            const result = await dispatch(verifyOTP({ email: forgotEmail, otp }));
+            if (verifyOTP.fulfilled.match(result)) {
+                setResetUserId(result.payload.userId);
+                setForgotStep(3);
+            }
+        } else if (forgotStep === 3) {
+            if (!resetPasswords.password || resetPasswords.password.length < 6) return toast.error("Password too short");
+            if (resetPasswords.password !== resetPasswords.confirm) return toast.error("Passwords mismatch");
+            const result = await dispatch(resetPassword({
+                userId: resetUserId,
+                newPassword: resetPasswords.password
+            }));
+            if (resetPassword.fulfilled.match(result)) {
+                setShowForgot(false);
+                setForgotStep(1);
+                setResetUserId(null); // Clear for safety
+            }
         }
     };
 
@@ -128,17 +170,23 @@ const Login = () => {
 
                             <AnimatePresence mode="wait">
                                 <motion.div
-                                    key={isLogin ? 'login-header' : 'reg-header'}
+                                    key={showForgot ? 'forgot-header' : isLogin ? 'login-header' : 'reg-header'}
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     className="text-center"
                                 >
                                     <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2 tracking-tight">
-                                        {isLogin ? 'Welcome Back' : 'Create Account'}
+                                        {showForgot ? (
+                                            forgotStep === 1 ? 'Forgot Access' :
+                                                forgotStep === 2 ? 'Verification' : 'Reset Credentials'
+                                        ) : isLogin ? 'Welcome Back' : 'Create Account'}
                                     </h1>
                                     <p className="text-purple-300/40 text-xs sm:text-sm font-medium">
-                                        {isLogin ? 'Sign in to your account' : 'Join our community today'}
+                                        {showForgot ? (
+                                            forgotStep === 1 ? 'Transmit email for identification' :
+                                                forgotStep === 2 ? 'Enter 6-digit transmission key' : 'Establish new security protocol'
+                                        ) : isLogin ? 'Sign in to your account' : 'Join our community today'}
                                     </p>
                                 </motion.div>
                             </AnimatePresence>
@@ -146,7 +194,61 @@ const Login = () => {
 
                         <div className="flex flex-col justify-start">
                             <AnimatePresence mode="wait">
-                                {isLogin ? (
+                                {showForgot ? (
+                                    <motion.form
+                                        key="forgot"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        onSubmit={handleForgotSubmit}
+                                        className="space-y-4"
+                                    >
+                                        {forgotStep === 1 && (
+                                            <AnimatedInput icon={FiMail} type="email" placeholder="Identification Email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
+                                        )}
+                                        {forgotStep === 2 && (
+                                            <div className="space-y-4">
+                                                <AnimatedInput icon={FiShield} type="text" placeholder="6-Digit OTP" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+                                                <p className="text-[10px] text-center text-white/30 tracking-widest font-bold uppercase">Transmission key expires in 10m</p>
+                                            </div>
+                                        )}
+                                        {forgotStep === 3 && (
+                                            <>
+                                                <AnimatedInput icon={FiLock} type="password" placeholder="New Protocol Code" value={resetPasswords.password} onChange={(e) => setResetPasswords({ ...resetPasswords, password: e.target.value })} />
+                                                <AnimatedInput icon={FiCheck} type="password" placeholder="Authenticate Code" value={resetPasswords.confirm} onChange={(e) => setResetPasswords({ ...resetPasswords, confirm: e.target.value })} />
+                                            </>
+                                        )}
+
+                                        <motion.button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="w-full py-4 rounded-2xl bg-purple-600 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-purple-900/40 flex items-center justify-center gap-3"
+                                        >
+                                            {isLoading ? (
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <>
+                                                    {forgotStep === 1 && <>Begin Retrieval <FiSend /></>}
+                                                    {forgotStep === 2 && <>Verify Encryption <FiArrowRight /></>}
+                                                    {forgotStep === 3 && <>Finalize Reset <FiCheck /></>}
+                                                </>
+                                            )}
+                                        </motion.button>
+
+                                        <div className="flex flex-col gap-3">
+                                            {forgotStep > 1 && (
+                                                <button type="button" onClick={() => setForgotStep(forgotStep - 1)} className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-all">
+                                                    Back to previous node
+                                                </button>
+                                            )}
+                                            <button type="button" onClick={() => { setShowForgot(false); setForgotStep(1); }} className="text-[9px] font-black uppercase tracking-[0.3em] text-purple-400 hover:text-purple-300 transition-all">
+                                                Return to Identification node
+                                            </button>
+                                        </div>
+                                    </motion.form>
+                                ) : isLogin ? (
                                     <motion.form
                                         key="login"
                                         initial={{ opacity: 0, x: -10 }}
@@ -158,8 +260,27 @@ const Login = () => {
                                         <AnimatedInput icon={FiMail} type="email" placeholder="Email Address" name="email" value={formData.email} onChange={handleChange} />
                                         <AnimatedInput icon={FiLock} type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} />
 
-                                        <div className="flex justify-end pr-1">
-                                            <button type="button" className="text-[10px] sm:text-xs text-purple-400 hover:text-purple-300 transition-colors font-medium">
+                                        <div className="flex items-center justify-between px-1">
+                                            <label className="flex items-center gap-2 cursor-pointer group/check">
+                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${rememberMe ? 'bg-purple-600 border-purple-600' : 'border-white/20 bg-white/5'}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="hidden"
+                                                        checked={rememberMe}
+                                                        onChange={() => setRememberMe(!rememberMe)}
+                                                    />
+                                                    {rememberMe && <FiCheck size={12} className="text-white" />}
+                                                </div>
+                                                <span className="text-[10px] text-purple-300/40 font-medium group-hover/check:text-purple-300 transition-colors">Remember me</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setForgotEmail(formData.email);
+                                                    setShowForgot(true);
+                                                }}
+                                                className="text-[10px] sm:text-xs text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                                            >
                                                 Forgot password?
                                             </button>
                                         </div>

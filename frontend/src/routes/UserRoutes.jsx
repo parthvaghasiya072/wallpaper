@@ -7,6 +7,8 @@ import ProductDetails from '../pages/ProductDetails';
 import Cart from '../pages/Cart';
 import Checkout from '../pages/Checkout';
 import OrderSuccess from '../pages/OrderSuccess';
+import AboutUs from '../pages/AboutUs';
+import ContactUs from '../pages/ContactUs';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 const UserRoutes = () => {
@@ -15,6 +17,8 @@ const UserRoutes = () => {
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/product-details/:id" element={<ProductDetails />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<ContactUs />} />
 
             <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
                 <Route path="/profile" element={<Profile />} />

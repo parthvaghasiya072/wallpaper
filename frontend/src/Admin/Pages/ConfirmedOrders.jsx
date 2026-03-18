@@ -42,6 +42,26 @@ const ConfirmedOrders = () => {
 
     const columns = [
         {
+            header: "Preview",
+            accessor: "items",
+            render: (item) => {
+                const firstImage = item.items?.[0]?.image;
+                return (
+                    <div className="w-12 h-12 rounded-2xl border border-slate-500/10 overflow-hidden bg-slate-800/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        {firstImage ? (
+                            <img
+                                src={firstImage.startsWith('http') ? firstImage : `http://localhost:5000${firstImage}`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <FiPackage className="opacity-20" size={16} />
+                        )}
+                    </div>
+                );
+            }
+        },
+        {
             header: "Order ID",
             accessor: "_id",
             render: (item) => (
@@ -83,6 +103,16 @@ const ConfirmedOrders = () => {
             accessor: "totalAmount",
             render: (item) => (
                 <span className="font-black text-indigo-600">₹{item.totalAmount}</span>
+            )
+        },
+        {
+            header: "Protocol",
+            accessor: "paymentMethod",
+            render: (item) => (
+                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${item.paymentMethod === 'COD' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                    {item.paymentMethod === 'COD' ? <FiTruck size={12} /> : <FiCreditCard size={12} />}
+                    {item.paymentMethod}
+                </div>
             )
         },
         {
@@ -143,6 +173,7 @@ const ConfirmedOrders = () => {
                 title={`Order Details`}
                 subtitle={`#${selectedOrder?._id.slice(-8).toUpperCase()}`}
                 description="Review shipment details and items purchased in this transaction."
+                images={selectedOrder?.items?.map(item => item.image) || []}
                 tags={[
                     { label: selectedOrder?.paymentStatus, className: selectedOrder?.paymentStatus === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
                     { label: selectedOrder?.paymentMethod, className: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' }
@@ -155,8 +186,8 @@ const ConfirmedOrders = () => {
                 ]}
             >
                 {selectedOrder && (
-                    <div id="print-area" className="space-y-8 mt-6">
-                        <div className="flex items-center justify-between">
+                    <div id="print-area" className="space-y-6">
+                        {/* <div className="flex items-center justify-between">
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Transaction Overview</h4>
                             <button
                                 onClick={() => window.print()}
@@ -164,8 +195,8 @@ const ConfirmedOrders = () => {
                             >
                                 <FiPrinter size={14} /> Print Invoice
                             </button>
-                        </div>
-                        <div className="space-y-4">
+                        </div> */}
+                        {/* <div className="space-y-4">
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Products Portfolio</h4>
                             <div className="grid gap-3">
                                 {selectedOrder.items.map((item, idx) => (
@@ -182,7 +213,7 @@ const ConfirmedOrders = () => {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Customer & Shipping */}
                         <div className="space-y-6 pt-6 border-t border-dashed border-slate-500/20">

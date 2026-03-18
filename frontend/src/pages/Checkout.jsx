@@ -91,6 +91,15 @@ const CheckoutContent = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [cardHolderName, setCardHolderName] = useState('');
 
+    const formatPrice = (amount) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    };
+
     useEffect(() => {
         if (!user) {
             navigate('/login');
@@ -156,7 +165,7 @@ const CheckoutContent = () => {
                     country: selectedAddress.country || 'India'
                 },
                 paymentMethod,
-                totalAmount
+                totalAmount: (totalAmount + (totalAmount * 0.18) + 150)
             };
 
             const result = await dispatch(createOrder(orderData));
@@ -419,7 +428,7 @@ const CheckoutContent = () => {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <p className="font-black text-xl text-orange-600 tracking-tighter">₹{item.price}</p>
+                                                        <p className="font-black text-xl text-orange-600 tracking-tighter">{formatPrice(item.price)}</p>
                                                     </div>
                                                 ))}
                                             </div>
@@ -441,24 +450,39 @@ const CheckoutContent = () => {
                                 </div>
                                 <div className="p-10 space-y-8">
                                     <div className="space-y-5">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-muted font-bold uppercase tracking-widest text-[11px]">Subtotal Cost</span>
-                                            <span className="font-black text-xl tracking-tighter text-primary">₹ {totalAmount.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-muted font-bold uppercase tracking-widest text-[11px]">Shipping Fee</span>
-                                            <span className="font-black text-primary uppercase text-[11px] tracking-widest text-green-500">FREE delivery</span>
-                                        </div>
-                                        <div className="h-[2px] w-full bg-surface" />
-                                        <div className="flex justify-between items-center pt-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Total Payable</span>
-                                                <span className="text-[10px] text-green-500 font-black uppercase tracking-widest">Inclusive of taxes</span>
-                                            </div>
-                                            <span className="text-4xl font-black text-orange-600 tracking-tighter">
-                                                ₹ {totalAmount.toFixed(2)}
-                                            </span>
-                                        </div>
+                                        {(() => {
+                                            const subtotal = totalAmount;
+                                            const gstAmount = subtotal * 0.18;
+                                            const shipping = 150;
+                                            const grandTotal = subtotal + gstAmount + shipping;
+
+                                            return (
+                                                <>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-muted font-bold uppercase tracking-widest text-[11px]">Subtotal (Excl. Tax)</span>
+                                                        <span className="font-black text-xl tracking-tighter text-primary">{formatPrice(subtotal)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-muted font-bold uppercase tracking-widest text-[11px]">GST (18%)</span>
+                                                        <span className="font-black text-orange-500">+{formatPrice(gstAmount)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-muted font-bold uppercase tracking-widest text-[11px]">Shipping Charges</span>
+                                                        <span className="font-black text-orange-600">{formatPrice(shipping)}</span>
+                                                    </div>
+                                                    <div className="h-[2px] w-full bg-surface" />
+                                                    <div className="flex justify-between items-center pt-2">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-xs font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Total Payable</span>
+                                                            <span className="text-[10px] text-green-500 font-black uppercase tracking-widest italic">All charges inclusive</span>
+                                                        </div>
+                                                        <span className="text-4xl font-black text-orange-600 tracking-tighter">
+                                                            {formatPrice(grandTotal)}
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
 
                                     {step === 2 && (

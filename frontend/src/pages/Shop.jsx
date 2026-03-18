@@ -301,6 +301,11 @@ const Shop = () => {
                                                         <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-orange-600 text-[10px] font-black  tracking-wider rounded-full shadow-sm">
                                                             {p.category}
                                                         </span>
+                                                        {p.paperOptions?.reduce((acc, opt) => acc + (opt.stocks || 0), 0) <= 0 && (
+                                                            <span className="ml-2 px-3 py-1 bg-red-500 text-white text-[10px] font-black tracking-wider rounded-full shadow-lg animate-pulse">
+                                                                SOLD OUT
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     {/* Action Buttons - Heart and Eye Icons sliding in */}

@@ -56,16 +56,38 @@ const CommonTable = ({
     const filteredData = useMemo(() => {
         if (isServerSide) return data;
         if (!searchTerm) return data;
-        return data.filter(item =>
-            columns.some(col => {
+
+        const lowerSearch = searchTerm.toLowerCase();
+
+        return data.filter(item => {
+            // Priority 1: Check columns with custom searchKey functions
+            const hasCustomMatch = columns.some(col => {
                 if (col.searchKey && typeof col.searchKey === 'function') {
-                    const customValue = col.searchKey(item);
-                    return customValue && customValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+                    const val = col.searchKey(item);
+                    return val && val.toString().toLowerCase().includes(lowerSearch);
                 }
-                const itemValue = item[col.accessor];
-                return itemValue && itemValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
-            })
-        );
+                return false;
+            });
+
+            if (hasCustomMatch) return true;
+
+            // Priority 2: Deep search across all properties of the item (excluding functions/actions)
+            const deepMatch = (obj) => {
+                for (let key in obj) {
+                    const value = obj[key];
+                    if (value === null || value === undefined) continue;
+
+                    if (typeof value === 'object' && !(value instanceof Date)) {
+                        if (deepMatch(value)) return true;
+                    } else {
+                        if (value.toString().toLowerCase().includes(lowerSearch)) return true;
+                    }
+                }
+                return false;
+            };
+
+            return deepMatch(item);
+        });
     }, [data, searchTerm, columns, isServerSide]);
 
     const sortedData = useMemo(() => {

@@ -104,6 +104,7 @@ const Admin = () => {
     });
 
     const [recentActivities, setRecentActivities] = useState([]);
+    const [stockAlerts, setStockAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
@@ -177,6 +178,23 @@ const Admin = () => {
                 time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }));
             setRecentActivities(activities);
+
+            // Process Stock Alerts
+            const alerts = [];
+            products.forEach(p => {
+                p.paperOptions.forEach(opt => {
+                    if (Number(opt.stocks) <= 5) {
+                        alerts.push({
+                            id: `${p._id}-${opt.paperType}`,
+                            productName: p.titleName,
+                            paperType: opt.paperType,
+                            stocks: opt.stocks,
+                            status: opt.stocks === 0 ? 'Out of Stock' : 'Low Stock'
+                        });
+                    }
+                });
+            });
+            setStockAlerts(alerts.slice(0, 5));
 
         } catch (error) {
             console.error("Dashboard Fetch Error:", error);
@@ -353,8 +371,45 @@ const Admin = () => {
                     </div>
                 </div>
 
+                {/* Stock Alert Table */}
+                <div className={`lg:col-span-4 rounded-lg border overflow-hidden ${isDark ? 'bg-slate-800/40 border-slate-700/50 shadow-2xl' : 'bg-white border-white shadow-[0_20px_50px_rgba(0,0,0,0.02)]'}`}>
+                    <div className="px-8 py-8 border-b border-dashed border-slate-500/20 flex items-center justify-between">
+                        <div>
+                            <h3 className={`font-black text-sm uppercase tracking-[0.2em] ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Inventory Alerts</h3>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Low Stock & Depleted Nodes</p>
+                        </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        {loading ? (
+                            <div className="animate-pulse space-y-4">
+                                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-700 rounded-xl" />)}
+                            </div>
+                        ) : stockAlerts.length > 0 ? (
+                            stockAlerts.map(alert => (
+                                <div key={alert.id} className={`p-4 rounded-xl border border-dashed flex items-center justify-between ${isDark ? 'border-slate-700 bg-slate-900/40' : 'border-slate-200 bg-slate-50/50'}`}>
+                                    <div className="flex flex-col">
+                                        <span className={`text-xs font-black truncate max-w-[150px] ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{alert.productName}</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{alert.paperType}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className={`text-[10px] font-black uppercase tracking-widest ${alert.stocks === 0 ? 'text-rose-500' : 'text-amber-500'}`}>
+                                            {alert.status}
+                                        </div>
+                                        <div className={`text-[9px] font-bold opacity-40 uppercase tracking-tighter`}>{alert.stocks} units left</div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-10 text-center opacity-30">
+                                <FiCheck size={24} className="mx-auto mb-2 text-emerald-500" />
+                                <p className="text-[10px] font-black uppercase tracking-widest">Stock fully archival</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Quick Actions & AI Insight */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="lg:col-span-12 space-y-8">
                     {/* <div className="p-8 rounded-[3rem] bg-indigo-600 text-white relative overflow-hidden group shadow-2xl shadow-indigo-600/40">
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-6">
@@ -402,7 +457,7 @@ const Admin = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

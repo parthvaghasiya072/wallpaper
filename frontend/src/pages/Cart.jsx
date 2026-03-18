@@ -34,7 +34,8 @@ const Cart = () => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            maximumFractionDigits: 0
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         }).format(amount);
     };
 
@@ -190,7 +191,7 @@ const Cart = () => {
                                                         <div className="text-right">
                                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-1">Price</p>
                                                             <p className="text-2xl font-black text-orange-500 tracking-tighter">
-                                                                ₹{item.price}
+                                                                {formatPrice(item.price)}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -213,24 +214,36 @@ const Cart = () => {
                                     </div>
                                     <div className="p-8 space-y-6">
                                         <div className="space-y-4">
-                                            <div className="flex justify-between items-center text-xs">
-                                                <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
-                                                <span className="font-bold text-orange-500">₹ {totalAmount.toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-xs">
-                                                <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Estimated GST (18%)</span>
-                                                <span className="font-bold text-orange-400">Inclusive</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-xs pb-4 border-b border-orange-50">
-                                                <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Delivery</span>
-                                                <span className="text-green-600 font-bold uppercase text-[10px] tracking-widest">Free</span>
-                                            </div>
-                                            <div className="flex  flex-wrap justify-between items-center pt-2">
-                                                <span className="text-base font-black uppercase  text-primary">GRAND TOTAL</span>
-                                                <span className="text-2xl font-black text-orange-600 tracking-tighter justify-end">
-                                                    ₹ {totalAmount.toFixed(2)}
-                                                </span>
-                                            </div>
+                                            {/* Calculations */}
+                                            {(() => {
+                                                const subtotal = totalAmount;
+                                                const gstAmount = subtotal * 0.18;
+                                                const shipping = 150;
+                                                const grandTotal = subtotal + gstAmount + shipping;
+
+                                                return (
+                                                    <>
+                                                        <div className="flex justify-between items-center text-xs">
+                                                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Subtotal (Excl. Tax)</span>
+                                                            <span className="font-bold text-primary">{formatPrice(subtotal)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs">
+                                                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">GST (18%)</span>
+                                                            <span className="font-bold text-orange-500">+{formatPrice(gstAmount)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs pb-4 border-b border-orange-50">
+                                                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Delivery Charges</span>
+                                                            <span className="text-orange-600 font-bold uppercase text-[10px] tracking-widest">{formatPrice(shipping)}</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap justify-between items-center pt-2">
+                                                            <span className="text-base font-black uppercase text-primary">GRAND TOTAL</span>
+                                                            <span className="text-2xl font-black text-orange-600 tracking-tighter justify-end">
+                                                                {formatPrice(grandTotal)}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
 
                                         <div className="bg-amber-50 rounded-2xl p-2 flex gap-3 border border-amber-100">

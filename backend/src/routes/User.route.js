@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { createUser, loginUser } = require("../controllers/authController");
+const { createUser, loginUser, forgotPassword, verifyOTP, resetPassword } = require("../controllers/authController");
 const { createAddress, getAllAddress, getSingleAddress, updateAddress, deleteAddress } = require("../controllers/addressController");
 const { addToCart, getCart, updateCartItem, removeFromCart } = require("../controllers/cartController");
 const { getWishlist, addToWishlist, removeFromWishlist } = require("../controllers/wishlistController");
@@ -11,6 +11,9 @@ const { protect } = require("../middleware/authMiddleware");
 // --- Auth Routes ---
 router.post("/register", createUser);
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyOTP);
+router.post("/reset-password", resetPassword);
 
 // --- Address Routes (Protected) ---
 router.post("/createAddress", protect, createAddress);
