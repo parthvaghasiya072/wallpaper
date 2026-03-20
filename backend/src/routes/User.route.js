@@ -5,7 +5,7 @@ const { createUser, loginUser, forgotPassword, verifyOTP, resetPassword } = requ
 const { createAddress, getAllAddress, getSingleAddress, updateAddress, deleteAddress } = require("../controllers/addressController");
 const { addToCart, getCart, updateCartItem, removeFromCart } = require("../controllers/cartController");
 const { getWishlist, addToWishlist, removeFromWishlist } = require("../controllers/wishlistController");
-const { createOrder, createPaymentIntent, updatePaymentStatus, getUserOrders, getUserConfirmedOrders } = require("../controllers/orderController");
+const { createOrder, createPaymentIntent, updatePaymentStatus, getUserOrders, getUserConfirmedOrders, getSingleConfirmedOrder, returnOrder, getUserReturnOrders } = require("../controllers/orderController");
 const { protect } = require("../middleware/authMiddleware");
 
 // --- Auth Routes ---
@@ -39,5 +39,8 @@ router.post("/create-payment-intent", protect, createPaymentIntent);
 router.post("/update-payment-status", protect, updatePaymentStatus);
 router.get("/my-orders", protect, getUserOrders);
 router.get("/my-confirmed-orders", protect, getUserConfirmedOrders);
+router.get("/get-confirmed-order/:id", protect, getSingleConfirmedOrder);
+router.post("/return-order", protect, returnOrder);
+router.get("/my-return-orders", protect, getUserReturnOrders);
 
 module.exports = router;

@@ -9,9 +9,9 @@ import { getUserById, updateUser, changePassword } from '../redux/slices/userSli
 import { getAllAddress, createAddress, updateAddressById, deleteAddressById } from '../redux/slices/addressSlice';
 import { getWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice';
 import { generateInvoice } from '../components/InvoiceGenerator';
-import { getMyConfirmedOrders } from '../redux/slices/orderSlice';
+import { getMyConfirmedOrders, getUserReturnOrders } from '../redux/slices/orderSlice';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye, FiEyeOff, FiLock, FiHash, FiGlobe, FiShoppingBag, FiSearch, FiArrowRight, FiDownload, FiActivity, FiFilter, FiExternalLink, FiAward, FiArchive, FiZap, FiChevronDown, FiChevronUp, FiClock, FiLayers, FiRefreshCcw, FiTruck } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiEdit2, FiShield, FiPackage, FiHeart, FiSave, FiX, FiCheckCircle, FiMapPin, FiPlus, FiHome, FiBriefcase, FiMoreHorizontal, FiTrash2, FiEye, FiEyeOff, FiLock, FiHash, FiGlobe, FiShoppingBag, FiSearch, FiArrowRight, FiDownload, FiActivity, FiFilter, FiExternalLink, FiAward, FiArchive, FiZap, FiChevronDown, FiChevronUp, FiClock, FiLayers, FiRefreshCcw, FiTruck, FiInfo } from 'react-icons/fi';
 
 // Helper for image URL
 const getImageUrl = (image) => {
@@ -30,7 +30,7 @@ const Profile = () => {
     const { selectedUser, loading, detailLoading } = useSelector((state) => state.user);
     const { addresses, loading: addressLoading } = useSelector((state) => state.address);
     const { items: wishlistItems, loading: wishlistLoading } = useSelector((state) => state.wishlist || {});
-    const { confirmedOrders, loading: orderLoading } = useSelector((state) => state.order || {});
+    const { confirmedOrders, returnOrders, loading: orderLoading } = useSelector((state) => state.order || {});
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'personal');
@@ -54,6 +54,7 @@ const Profile = () => {
     });
     const [isPasswordLoading, setIsPasswordLoading] = useState(false);
     const [expandedOrderId, setExpandedOrderId] = useState(null);
+    const [expandedReturnId, setExpandedReturnId] = useState(null);
 
     const fileInputRef = React.useRef(null);
 
@@ -85,6 +86,9 @@ const Profile = () => {
         if (activeTab === 'orders' && userId) {
             dispatch(getMyConfirmedOrders());
         }
+        if (activeTab === 'returns' && userId) {
+            dispatch(getUserReturnOrders());
+        }
     }, [dispatch, activeTab, authUser]);
 
     useEffect(() => {
@@ -114,6 +118,7 @@ const Profile = () => {
     const tabs = [
         { id: 'personal', label: 'Personal Info', icon: <FiUser /> },
         { id: 'orders', label: 'My Orders', icon: <FiPackage /> },
+        { id: 'returns', label: 'Returns', icon: <FiRefreshCcw /> },
         { id: 'wishlist', label: 'Wishlist', icon: <FiHeart /> },
         { id: 'address', label: 'Address', icon: <FiMapPin /> },
         { id: 'security', label: 'Security', icon: <FiShield /> },
@@ -1223,7 +1228,153 @@ const Profile = () => {
                                 </motion.div>
                             )}
 
-                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && activeTab !== 'security' && activeTab !== 'orders' && (
+                            {activeTab === 'returns' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="p-8 md:p-12"
+                                >
+                                    <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                                        <div>
+                                            <h3 className="text-4xl font-bold text-primary mb-3 font-serif italic tracking-tight">Return History</h3>
+                                            <p className="text-muted font-medium max-w-sm leading-relaxed">View the status of your returned masterpieces.</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 px-6 py-3 bg-orange-50 rounded-2xl border border-orange-100">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-200">
+                                                <FiRefreshCcw size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-orange-600/50">Total Returns</p>
+                                                <p className="text-lg font-black text-primary leading-none">{returnOrders?.length || 0}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {orderLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                                            <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-600/40">Synchronizing Returns...</p>
+                                        </div>
+                                    ) : returnOrders?.length > 0 ? (
+                                        <div className="space-y-8 max-h-[700px] overflow-y-auto pr-4 custom-scrollbar">
+                                            {returnOrders.map((order) => {
+                                                const isExpanded = expandedReturnId === order._id;
+                                                return (
+                                                    <div key={order._id} className={`group bg-white border rounded-[2.5rem] overflow-hidden transition-all duration-500 ${isExpanded ? 'border-orange-500 shadow-[0_30px_60px_-15px_rgba(249,115,22,0.15)] mb-8' : 'border-gray-100 hover:border-orange-200 mb-6'}`}>
+                                                        {/* Card Header */}
+                                                        <div
+                                                            onClick={() => setExpandedReturnId(isExpanded ? null : order._id)}
+                                                            className="p-6 md:p-8 cursor-pointer relative"
+                                                        >
+                                                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                                                                {/* Reference & Image Preview */}
+                                                                <div className="flex items-center gap-6">
+                                                                    <div className="relative flex-shrink-0 flex items-center">
+                                                                        {order.items.slice(0, 3).map((item, idx) => (
+                                                                            <div
+                                                                                key={idx}
+                                                                                className="w-16 h-16 rounded-2xl border-2 border-white shadow-lg overflow-hidden bg-gray-50 transition-transform duration-500 group-hover:scale-105"
+                                                                                style={{
+                                                                                    marginLeft: idx === 0 ? '0' : '-35px',
+                                                                                    zIndex: 3 - idx,
+                                                                                    transform: `rotate(${idx * 8 - 8}deg)`
+                                                                                }}
+                                                                            >
+                                                                                <img src={item.image?.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} className="w-full h-full object-cover" alt="" />
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="flex items-center gap-3 mb-1">
+                                                                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted">ID</p>
+                                                                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${order.returnStatus === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                                                {order.returnStatus}
+                                                                            </span>
+                                                                        </div>
+                                                                        <h4 className="text-xl font-black text-primary tracking-tighter uppercase italic">#{order._id.slice(-8)}</h4>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Stats */}
+                                                                <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-6 lg:ml-10">
+                                                                    <div>
+                                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted mb-1">Returned</p>
+                                                                        <p className="text-xs font-bold text-primary flex items-center gap-2">
+                                                                            <FiClock className="text-orange-400" />
+                                                                            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600/50 mb-1">Total Refund</p>
+                                                                        <p className="text-xl font-black text-orange-600 tracking-tighter italic">₹{order.totalAmount}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Chevron */}
+                                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${isExpanded ? 'bg-primary text-white rotate-180' : 'bg-orange-50 text-orange-500 group-hover:bg-orange-100'}`}>
+                                                                    <FiChevronDown size={20} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Accordion Content */}
+                                                        <AnimatePresence>
+                                                            {isExpanded && (
+                                                                <motion.div
+                                                                    initial={{ height: 0, opacity: 0 }}
+                                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                                    exit={{ height: 0, opacity: 0 }}
+                                                                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                                                                >
+                                                                    <div className="p-8 md:p-10 pt-4 border-t border-gray-50 bg-gradient-to-b from-white to-orange-50/20">
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+                                                                            <div>
+                                                                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted mb-4 px-2 italic">Return Criteria</p>
+                                                                                <div className="p-6 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                                                                                    <div className="flex items-center gap-3 mb-2">
+                                                                                        <FiInfo className="text-orange-500" />
+                                                                                        <p className="text-[11px] font-black text-primary uppercase">Reason for return</p>
+                                                                                    </div>
+                                                                                    <p className="text-sm font-bold text-muted italic ml-7">{order.reason}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="space-y-4">
+                                                                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted mb-4 px-2">Portfolio Details</p>
+                                                                                {order.items.map((item, idx) => (
+                                                                                    <div key={idx} className="group/item flex gap-5 p-4 rounded-3xl bg-white border border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300">
+                                                                                        <div className="w-16 h-16 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
+                                                                                            <img src={item.image?.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} className="w-full h-full object-cover" alt="" />
+                                                                                        </div>
+                                                                                        <div className="flex-1 flex flex-col justify-center">
+                                                                                            <h5 className="font-bold text-primary text-xs uppercase tracking-tight">{item.titleName}</h5>
+                                                                                            <p className="text-[9px] font-black text-muted mt-1 uppercase tracking-widest">{item.paperMaterial?.paperType} • x{item.quantity}</p>
+                                                                                            <span className="text-xs font-black text-orange-500 mt-1 italic">₹{item.price}</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="border-4 border-double border-gray-100 rounded-[3rem] p-24 text-center bg-gray-50/30">
+                                            <div className="w-24 h-24 bg-white rounded-[2rem] shadow-2xl shadow-gray-200 flex items-center justify-center mx-auto mb-10 text-orange-400">
+                                                <FiRefreshCcw size={40} />
+                                            </div>
+                                            <h4 className="text-3xl font-serif font-black text-primary mb-4 italic tracking-tight">No Returns Found</h4>
+                                            <p className="text-muted mb-10 max-w-sm mx-auto font-medium leading-relaxed">Your collection matches your vision perfectly. No pieces have been returned yet.</p>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {activeTab !== 'personal' && activeTab !== 'address' && activeTab !== 'wishlist' && activeTab !== 'security' && activeTab !== 'orders' && activeTab !== 'returns' && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}

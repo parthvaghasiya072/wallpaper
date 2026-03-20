@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { loginUser, registerUser, forgotPassword, verifyOTP, resetPassword } from '../redux/slices/authSlice';
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiCheck, FiSend, FiShield, FiKey, FiX } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -138,7 +138,6 @@ const Login = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#060412] font-sans">
-            <Toaster position="top-center" />
 
             <AnimatedBackground />
 

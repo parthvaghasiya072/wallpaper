@@ -90,10 +90,62 @@ export const getMyConfirmedOrders = createAsyncThunk(
     }
 );
 
+export const getSingleConfirmedOrder = createAsyncThunk(
+    "order/getSingleConfirmedOrder",
+    async (id, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.get(`${API_URL}/user/get-confirmed-order/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Axios getSingleConfirmedOrder error:", error);
+            const message = error.response?.data?.message || error.message || "Failed to fetch order";
+            return rejectWithValue(message);
+        }
+    }
+);
+
+export const returnOrder = createAsyncThunk(
+    "order/returnOrder",
+    async (returnData, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.post(`${API_URL}/user/return-order`, returnData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Axios returnOrder error:", error);
+            const message = error.response?.data?.message || error.message || "Failed to return order";
+            return rejectWithValue(message);
+        }
+    }
+);
+
+export const getUserReturnOrders = createAsyncThunk(
+    "order/getUserReturnOrders",
+    async (_, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.get(`${API_URL}/user/my-return-orders`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Axios getUserReturnOrders error:", error);
+            const message = error.response?.data?.message || error.message || "Failed to fetch return orders";
+            return rejectWithValue(message);
+        }
+    }
+);
+
 const initialState = {
     currentOrder: null,
     orders: [],
     confirmedOrders: [],
+    returnOrders: [],
     loading: false,
     error: null
 };
@@ -164,6 +216,41 @@ const orderSlice = createSlice({
                 state.confirmedOrders = action.payload.orders;
             })
             .addCase(getMyConfirmedOrders.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(getSingleConfirmedOrder.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getSingleConfirmedOrder.fulfilled, (state, action) => {
+                state.loading = false;
+                state.currentOrder = action.payload.order;
+            })
+            .addCase(getSingleConfirmedOrder.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(returnOrder.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(returnOrder.fulfilled, (state) => {
+                state.loading = false;
+                toast.success("Order return request submitted!");
+            })
+            .addCase(returnOrder.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                toast.error(action.payload);
+            })
+            .addCase(getUserReturnOrders.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(getUserReturnOrders.fulfilled, (state, action) => {
+                state.loading = false;
+                state.returnOrders = action.payload.orders;
+            })
+            .addCase(getUserReturnOrders.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });

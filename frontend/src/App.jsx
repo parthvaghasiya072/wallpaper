@@ -2,12 +2,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import UserRoutes from './routes/UserRoutes';
 import AdminRoutes from './routes/AdminRoutes';
-import { Toaster } from 'react-hot-toast';
+import CustomToaster from './components/CustomToaster';
 
 function App() {
   return (
     <Router>
-      <Toaster position="top-center" reverseOrder={false} />
+      <CustomToaster />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />

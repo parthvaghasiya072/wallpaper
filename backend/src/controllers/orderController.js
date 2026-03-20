@@ -2,6 +2,7 @@ const Order = require('../models/OrderModel');
 const Cart = require('../models/CartModel');
 const Product = require('../models/ProductModel');
 const ConfirmOrder = require('../models/ConfirmOrderModel');
+const ReturnOrder = require('../models/ReturnOrderModel');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Create a new order
@@ -171,6 +172,62 @@ const getUserConfirmedOrders = async (req, res) => {
     }
 };
 
+// Get single confirmed order by ID
+const getSingleConfirmedOrder = async (req, res) => {
+    try {
+        const order = await ConfirmOrder.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+        res.status(200).json({ success: true, order });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Return an order
+const returnOrder = async (req, res) => {
+    try {
+        const { orderId, reason } = req.body;
+        const userId = req.user._id;
+
+        const order = await ConfirmOrder.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Confirmed order not found" });
+        }
+
+        // 1. Create Return Order entry
+        const returnOrderData = new ReturnOrder({
+            ...order.toObject(),
+            originalOrderId: order._id,
+            reason: reason,
+            returnStatus: 'Pending'
+        });
+        delete returnOrderData._id; // Let Mongoose generate a new ID
+
+        await returnOrderData.save();
+
+        // 2. Delete from ConfirmOrder section
+        await ConfirmOrder.findByIdAndDelete(orderId);
+
+        res.status(200).json({ success: true, message: "Order return request submitted successfully", returnOrder: returnOrderData });
+    } catch (error) {
+        console.error("Return Order Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get user returned orders
+const getUserReturnOrders = async (req, res) => {
+    try {
+        const orders = await ReturnOrder.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        res.status(200).json({ success: true, orders });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     createOrder,
     createPaymentIntent,
@@ -178,5 +235,8 @@ module.exports = {
     getUserOrders,
     getAllOrders,
     getAllConfirmedOrders,
-    getUserConfirmedOrders
+    getUserConfirmedOrders,
+    getSingleConfirmedOrder,
+    returnOrder,
+    getUserReturnOrders
 };

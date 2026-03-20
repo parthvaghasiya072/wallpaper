@@ -78,24 +78,33 @@ const loginUser = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
-    // Check for email credentials
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error("CRITICAL: Email credentials missing in .env file (EMAIL_USER/EMAIL_PASS)");
-        return res.status(500).json({
-            message: "Server email configuration incomplete. Please contact support or check server logs."
-        });
+    if (!email) {
+        return res.status(400).json({ message: "Email is required" });
     }
 
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found with this email" });
         }
 
+        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Save OTP to User Document
         user.resetPasswordOTP = otp;
-        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes from now
         await user.save();
+
+        // Check for email credentials
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.log(`[DEV MODE] OTP for ${email}: ${otp}`);
+            return res.status(200).json({
+                success: true,
+                message: "OTP generated successfully. (Note: Email credentials missing in .env, check server console for OTP in development mode)",
+                devOtp: process.env.NODE_ENV === 'development' ? otp : undefined
+            });
+        }
 
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -106,22 +115,30 @@ const forgotPassword = async (req, res) => {
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"Lumiere Art Store" <${process.env.EMAIL_USER}>`,
             to: email,
             subject: "Password Reset OTP - Lumiere Art Store",
-            text: `Your OTP for password reset is: ${otp}. This OTP will expire in 10 minutes.`
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                    <h2 style="color: #4F46E5; text-align: center;">Secure Password Reset</h2>
+                    <p>Hello,</p>
+                    <p>We received a request to reset your password. Use the following OTP to proceed:</p>
+                    <div style="background: #f3f4f6; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #1f2937; border-radius: 8px; margin: 20px 0;">
+                        ${otp}
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px;">This code will expire in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                    <p style="text-align: center; color: #9ca3af; font-size: 12px;">© 2026 Lumiere Art Store. All rights reserved.</p>
+                </div>
+            `
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.status(500).json({ message: "Error sending OTP via email" });
-            }
-            res.status(200).json({ message: "OTP sent to your email" });
-        });
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({ success: true, message: "OTP sent to your email" });
 
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Forgot Password Error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
