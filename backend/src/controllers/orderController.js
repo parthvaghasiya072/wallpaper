@@ -1,9 +1,11 @@
+const mongoose = require('mongoose');
 const Order = require('../models/OrderModel');
 const Cart = require('../models/CartModel');
 const Product = require('../models/ProductModel');
 const ConfirmOrder = require('../models/ConfirmOrderModel');
 const ReturnOrder = require('../models/ReturnOrderModel');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const shiprocketService = require('../services/shiprocketService');
 
 // Create a new order
 const createOrder = async (req, res) => {
@@ -26,9 +28,17 @@ const createOrder = async (req, res) => {
 
         await order.save();
 
-        // If COD, we can clear cart immediately. For other methods, wait for success.
+        // If COD, we can clear cart immediately and push the order to Shiprocket.
         if (paymentMethod === 'COD') {
             await Cart.findOneAndDelete({ userId });
+
+            // 🚀 Auto-generate Shiprocket order for COD!
+            const srResponse = await shiprocketService.createCustomOrder(order, req.user);
+            if (srResponse.success) {
+                order.shiprocketOrderId = srResponse.shiprocketOrderId;
+                if (srResponse.shiprocketAWB) order.shiprocketAWB = srResponse.shiprocketAWB;
+                await order.save();
+            }
         }
 
         res.status(201).json({ success: true, order });
@@ -108,10 +118,15 @@ const updatePaymentStatus = async (req, res) => {
                 originalOrderId: order._id,
                 paymentStatus: 'Completed'
             });
-            // Remove the _id from the object to let Mongoose generate a new one if needed, 
-            // but the user wants it "IN CONFIRMORDER SECTION NOT IN ORDER SECTION".
-            // Actually, we can keep the same data.
+            // Remove the _id from the object to let Mongoose generate a new one
             delete confirmedOrder._id;
+
+            // 🚀 Auto-generate Shiprocket order for Prepaid Completed Order!
+            const srResponse = await shiprocketService.createCustomOrder(confirmedOrder, req.user);
+            if (srResponse.success) {
+                confirmedOrder.shiprocketOrderId = srResponse.shiprocketOrderId;
+                if (srResponse.shiprocketAWB) confirmedOrder.shiprocketAWB = srResponse.shiprocketAWB;
+            }
 
             await confirmedOrder.save();
 
@@ -228,6 +243,63 @@ const getUserReturnOrders = async (req, res) => {
     }
 };
 
+// Track order with Shiprocket
+const trackOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        // Check if ID is a valid MongoDB ObjectId to prevent server crash
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(200).json({ success: false, message: "Invalid Order ID format" });
+        }
+
+        // 1. Try to find order in ConfirmOrder or Order
+        let order = await ConfirmOrder.findById(orderId) || await Order.findById(orderId) || await ReturnOrder.findById(orderId);
+
+        if (!order) {
+            return res.status(200).json({ success: false, message: "Order not found" });
+        }
+
+        // 2. Check if we have AWB or Shiprocket Order ID
+        if (order.shiprocketAWB) {
+            const tracking = await shiprocketService.trackOrder(order.shiprocketAWB);
+            return res.status(200).json(tracking);
+        } else if (order.shiprocketOrderId) {
+            const tracking = await shiprocketService.trackByOrderId(order.shiprocketOrderId);
+            return res.status(200).json(tracking);
+        } else {
+            return res.status(200).json({ success: false, message: "Tracking details not available for this order yet. Await carrier update." });
+        }
+    } catch (error) {
+        console.error("Tracking Controller Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Admin: Update Order Tracking Info
+const updateOrderTracking = async (req, res) => {
+    try {
+        const { orderId, shiprocketAWB, shiprocketOrderId } = req.body;
+
+        // Find order in ConfirmOrder or Order
+        let order = await ConfirmOrder.findById(orderId) || await Order.findById(orderId);
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        if (shiprocketAWB) order.shiprocketAWB = shiprocketAWB;
+        if (shiprocketOrderId) order.shiprocketOrderId = shiprocketOrderId;
+
+        await order.save();
+
+        res.status(200).json({ success: true, message: "Tracking info updated successfully", order });
+    } catch (error) {
+        console.error("Update Tracking Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     createOrder,
     createPaymentIntent,
@@ -238,5 +310,7 @@ module.exports = {
     getUserConfirmedOrders,
     getSingleConfirmedOrder,
     returnOrder,
-    getUserReturnOrders
+    getUserReturnOrders,
+    trackOrder,
+    updateOrderTracking
 };

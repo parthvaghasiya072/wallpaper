@@ -22,7 +22,7 @@ const upload = require("../middleware/upload");
 const { createHeroSection, updateHeroSection, deleteHeroSection } = require("../controllers/heroController");
 const { createTag, getTagById, updateTagById, deleteTagById } = require("../controllers/tagController");
 const { createBanner, deleteBannerById, updateBannerById, singleBannerById } = require("../controllers/bannerController");
-const { getAllOrders, getAllConfirmedOrders } = require("../controllers/orderController");
+const { getAllOrders, getAllConfirmedOrders, updateOrderTracking } = require("../controllers/orderController");
 const { protect } = require("../middleware/authMiddleware"); // Assuming protect is needed and can check for admin but for now just protect
 
 // --- Product Routes ---
@@ -61,5 +61,6 @@ router.delete("/deleteBannerById/:id", deleteBannerById)
 // --- Order Routes ---
 router.get("/getAllOrders", protect, getAllOrders);
 router.get("/getAllConfirmedOrders", protect, getAllConfirmedOrders);
+router.put("/updateOrderTracking", protect, updateOrderTracking);
 
 module.exports = router;

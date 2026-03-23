@@ -67,6 +67,12 @@ const orderSchema = new mongoose.Schema({
     },
     paymentDetails: {
         type: mongoose.Schema.Types.Mixed
+    },
+    shiprocketOrderId: {
+        type: String
+    },
+    shiprocketAWB: {
+        type: String
     }
 }, { timestamps: true });
 

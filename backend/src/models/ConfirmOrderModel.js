@@ -68,6 +68,12 @@ const confirmOrderSchema = new mongoose.Schema({
     originalOrderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order'
+    },
+    shiprocketOrderId: {
+        type: String
+    },
+    shiprocketAWB: {
+        type: String
     }
 }, { timestamps: true });
 

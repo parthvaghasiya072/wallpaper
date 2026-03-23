@@ -141,11 +141,32 @@ export const getUserReturnOrders = createAsyncThunk(
     }
 );
 
+export const trackOrder = createAsyncThunk(
+    "order/trackOrder",
+    async (orderId, { getState, rejectWithValue }) => {
+        try {
+            const { token } = getState().auth;
+            const response = await axios.get(`${API_URL}/user/track-order/${orderId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.data.success === false) {
+                return rejectWithValue(response.data.message || "Tracking details not matched");
+            }
+            return response.data;
+        } catch (error) {
+            console.error("Axios trackOrder error:", error);
+            const message = error.response?.data?.message || error.message || "Failed to track order";
+            return rejectWithValue(message);
+        }
+    }
+);
+
 const initialState = {
     currentOrder: null,
     orders: [],
     confirmedOrders: [],
     returnOrders: [],
+    trackingInfo: null,
     loading: false,
     error: null
 };
@@ -253,6 +274,19 @@ const orderSlice = createSlice({
             .addCase(getUserReturnOrders.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            .addCase(trackOrder.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(trackOrder.fulfilled, (state, action) => {
+                state.loading = false;
+                state.trackingInfo = action.payload;
+            })
+            .addCase(trackOrder.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                toast.error(action.payload);
             });
     }
 });

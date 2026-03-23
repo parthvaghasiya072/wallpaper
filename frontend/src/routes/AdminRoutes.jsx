@@ -24,7 +24,8 @@ const AdminRoutes = () => {
                     <Route path="category" element={<Category />} />
                     <Route path="users" element={<Users />} />
                     <Route path="profile" element={<AdminProfile />} />
-                    <Route path="confirmed-orders" element={<ConfirmedOrders />} />
+                    <Route path="orders/:status" element={<ConfirmedOrders />} />
+                    <Route path="confirmed-orders" element={<Navigate to="/admin/orders/all" replace />} />
                     <Route path="sales" element={<Sales />} />
                     <Route path="home" element={<HomePage />} /> {/* Restore Home Page */}
                     <Route path="home/hero" element={<HeroSection />} />

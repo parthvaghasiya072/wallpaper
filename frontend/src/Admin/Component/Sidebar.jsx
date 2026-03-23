@@ -25,7 +25,18 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, isMobile, isDark }) => {
         { icon: FiImage, label: 'Products', path: '/admin/products' },
         { icon: FiGrid, label: 'Categories', path: '/admin/category' },
         { icon: FiUsers, label: 'Users', path: '/admin/users' },
-        { icon: FiCheckCircle, label: 'Confirmed Orders', path: '/admin/confirmed-orders' },
+        {
+            icon: FiCheckCircle,
+            label: 'Orders',
+            path: '/admin/orders/all',
+            submenu: [
+                { label: 'All Orders', path: '/admin/orders/all' },
+                { label: 'Pending', path: '/admin/orders/pending' },
+                { label: 'Processing', path: '/admin/orders/processing' },
+                { label: 'Shipping', path: '/admin/orders/shipping' },
+                { label: 'Delivered', path: '/admin/orders/delivered' }
+            ]
+        },
         { icon: FiActivity, label: 'Sales', path: '/admin/sales' },
         {
             icon: FiSettings,

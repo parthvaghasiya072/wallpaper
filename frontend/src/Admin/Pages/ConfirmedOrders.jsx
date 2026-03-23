@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiPackage, FiUser, FiMapPin, FiCheckCircle, FiTrash2, FiClock, FiShoppingBag, FiTruck, FiCreditCard, FiPrinter } from 'react-icons/fi';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import CommonTable from '../Component/CommonTable';
 import CommonViewModal from '../Component/CommonViewModal';
 
 const ConfirmedOrders = () => {
     const { isDark } = useOutletContext();
+    const { status } = useParams();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -124,6 +125,23 @@ const ConfirmedOrders = () => {
                     {item.paymentStatus}
                 </div>
             )
+        },
+        {
+            header: "Status",
+            accessor: "orderStatus",
+            render: (item) => {
+                let statusColor = "bg-gray-500/10 text-gray-500";
+                if (item.orderStatus === 'Processing') statusColor = "bg-blue-500/10 text-blue-500";
+                if (item.orderStatus === 'Shipped') statusColor = "bg-orange-500/10 text-orange-500";
+                if (item.orderStatus === 'Delivered') statusColor = "bg-emerald-500/10 text-emerald-500";
+
+                return (
+                    <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${statusColor}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                        {item.orderStatus || 'Pending'}
+                    </div>
+                )
+            }
         }
     ];
 
@@ -132,15 +150,34 @@ const ConfirmedOrders = () => {
         setIsViewModalOpen(true);
     };
 
+    const filteredOrders = orders.filter(order => {
+        if (!status || status === 'all') return true;
+        const lowerStatus = status.toLowerCase();
+
+        // Handle variations in status strings
+        if (lowerStatus === 'pending') {
+            return order.orderStatus?.toLowerCase() === 'pending' || order.paymentStatus?.toLowerCase() === 'pending';
+        }
+        if (lowerStatus === 'shipping' || lowerStatus === 'shipped') {
+            return order.orderStatus?.toLowerCase() === 'shipped' || order.orderStatus?.toLowerCase() === 'shipping';
+        }
+        return order.orderStatus?.toLowerCase() === lowerStatus;
+    });
+
+    const getPageTitle = () => {
+        if (!status || status === 'all') return 'All Orders';
+        return status.charAt(0).toUpperCase() + status.slice(1) + ' Orders';
+    };
+
     return (
         <div className="space-y-8 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className={`text-4xl font-black tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        Confirmed Orders
+                    <h1 className={`text-4xl font-black tracking-tight mb-2 ${isDark ? 'text-white' : 'text-slate-900'} capitalize`}>
+                        {getPageTitle()}
                     </h1>
                     <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        Oversee successful transactions and delivery logistics
+                        Oversee {status === 'all' ? 'all' : status} transactions and delivery logistics
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -151,7 +188,7 @@ const ConfirmedOrders = () => {
                             </div>
                         ))}
                         <div className={`w-10 h-10 rounded-full border-4 ${isDark ? 'border-slate-900 bg-indigo-500' : 'border-white bg-indigo-600'} flex items-center justify-center text-[10px] font-black text-white`}>
-                            +{orders.length}
+                            +{filteredOrders.length}
                         </div>
                     </div>
                 </div>
@@ -159,7 +196,7 @@ const ConfirmedOrders = () => {
 
             <CommonTable
                 columns={columns}
-                data={orders}
+                data={filteredOrders}
                 onView={handleView}
                 isDark={isDark}
                 searchPlaceholder="Search by ID or customer..."
